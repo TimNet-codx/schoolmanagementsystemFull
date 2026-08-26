@@ -1,15 +1,23 @@
-
 import FormModal from "@/components/FromModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { Assignment, Teacher, Subject, Class, Prisma  } from "@/generated/prisma/client";
-import {assignmentsData, role,} from "@/lib/data";
+import {
+  Assignment,
+  Teacher,
+  Subject,
+  Class,
+  Prisma,
+} from "@/generated/prisma/client";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
+import { getAuthUser } from "@/lib/utils";
 import Image from "next/image";
 
-type AssignmentList = Assignment & { lesson: { teacher: Teacher, subject: Subject, class: Class } };
+const { currentUserId, role } = await getAuthUser();
+type AssignmentList = Assignment & {
+  lesson: { teacher: Teacher; subject: Subject; class: Class };
+};
 
 const columns = [
   {
@@ -30,10 +38,14 @@ const columns = [
     accessor: "dueDate",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin" || role == "teacher"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const AssignmentListPage = async ({
@@ -41,64 +53,101 @@ const AssignmentListPage = async ({
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
+  //  const { currentUserId, role } = await getAuthUser();
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page) : 1;
 
   const query: Prisma.AssignmentWhereInput = {};
-  if(queryParams){
-    for(const [key, value] of Object.entries(queryParams)){
-      if(value !== undefined){
-        switch(key){
+
+  query.lesson = {};
+
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
           case "classId":
-            query.lesson = {classId: parseInt(value)};
+            query.lesson.classId = parseInt(value);
             break;
-            case "teacherId":
-              query.lesson = {teacherId: value};
-              break;
-              case "search": 
-              query.lesson = {subject: {name: {contains: value, mode: "insensitive"}}};
-              break;
-              default:
-                break;
+          case "teacherId":
+            query.lesson.teacherId = value;
+            break;
+          case "search":
+            query.lesson.subject = {
+              name: { contains: value, mode: "insensitive" },
+            };
+            break;
+          default:
+            break;
         }
       }
     }
   }
 
+  // ROLE CONDITIONS
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      query.lesson.teacherId = currentUserId!;
+      break;
+    case "student":
+      query.lesson.class = {
+        students: {
+          some: {
+            id: currentUserId!,
+          },
+        },
+      };
+      break;
+    case "parent":
+      query.lesson.class = {
+        students: {
+          some: {
+            parentId: currentUserId!,
+          },
+        },
+      };
+      break;
+    default:
+      break;
+  }
+
   const [data, count] = await prisma.$transaction([
     prisma.assignment.findMany({
       where: query,
-      include:{
+      include: {
         lesson: {
           select: {
-            teacher: {select: {name: true, surname: true}},
-            class: {select: {name: true}},
-            subject: {select: {name: true}}
-          }
-        }
+            teacher: { select: { name: true, surname: true } },
+            class: { select: { name: true } },
+            subject: { select: { name: true } },
+          },
+        },
       },
       take: ITEM_PER_PAGE,
-      skip: ITEM_PER_PAGE * (pageNumber - 1)
+      skip: ITEM_PER_PAGE * (pageNumber - 1),
     }),
-    prisma.assignment.count({where: query})
-    
-  ])
-
-
-
+    prisma.assignment.count({ where: query }),
+  ]);
 
   const renderRow = (item: AssignmentList) => (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
-      <td className="flex items-center gap-4 p-4">{item.lesson.subject.name}</td>
+      <td className="flex items-center gap-4 p-4">
+        {item.lesson.subject.name}{" "}
+      </td>
       <td>{item.lesson.class.name}</td>
-      <td className="hidden md:table-cell">{item.lesson.teacher.name + " " + item.lesson.teacher.surname}</td>
-            <td className="hidden md:table-cell">{new Intl.DateTimeFormat("en-NG").format(item.dueDate)}</td>
+      <td className="hidden md:table-cell">
+        {item.lesson.teacher.name + " " + item.lesson.teacher.surname}
+      </td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-NG").format(item.dueDate)}
+      </td>
       <td>
         <div className="flex items-center gap-2">
-          {role.includes("admin") || role.includes("teacher") && (
+          {(role == "admin" || role === "teacher") && (
             <>
               <FormModal table="assignment" type="update" data={item} />
               <FormModal table="assignment" type="delete" id={item.id} />
@@ -125,7 +174,9 @@ const AssignmentListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role.includes("admin") || role.includes("teacher") && <FormModal table="assignment" type="create" />}
+            {(role === "admin" || role === "teacher") && (
+              <FormModal table="assignment" type="create" />
+            )}
           </div>
         </div>
       </div>

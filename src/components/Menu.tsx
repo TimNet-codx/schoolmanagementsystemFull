@@ -1,8 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
- import { role } from "../lib/data";
-import { auth, clerkClient  } from '@clerk/nextjs/server';
-
+import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
 
 const menuItems = [
   {
@@ -119,7 +117,6 @@ const menuItems = [
   },
 ];
 
-
 // const Menu = () => {
 //     return (
 //    <div className="mt-4 text-sm">
@@ -213,17 +210,20 @@ const menuItems = [
 // };
 
 const Menu = async () => {
-  const { userId } = await auth();
+  // const { userId } = await auth();
 
-  let role: string | undefined;
+  // let role: string | undefined;
 
-  if (userId) {
-    const client = await clerkClient();
-    const user = await client.users.getUser(userId);
-    role = (user.publicMetadata as { role?: string })?.role;
-  }
+  // if (userId) {
+  //   const client = await clerkClient();
+  //   const user = await client.users.getUser(userId);
+  //   role = (user.publicMetadata as { role?: string })?.role;
+  // }
 
-  console.log("resolved role:", role);
+  // console.log("resolved role:", role);
+  const user = await currentUser();
+
+  const role = user?.publicMetadata.role as string;
 
   return (
     <div className="mt-4 text-sm">
@@ -249,6 +249,5 @@ const Menu = async () => {
     </div>
   );
 };
-
 
 export default Menu;
