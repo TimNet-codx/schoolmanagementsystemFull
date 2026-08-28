@@ -8,58 +8,59 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
 import { getAuthUser } from "@/lib/utils";
 
-const { role } = await getAuthUser();
 type ParentList = Parent & { students: Student[] };
 
-const columns = [
-  {
-    header: "Info",
-    accessor: "info",
-  },
-  {
-    header: "Parent ID",
-    accessor: "id",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Parent Surname",
-    accessor: "surname",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Username",
-    accessor: "username",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Student Names",
-    accessor: "students",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Phone",
-    accessor: "phone",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Address",
-    accessor: "address",
-    className: "hidden lg:table-cell",
-  },
-  ...(role === "admin"
-    ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
-    : []),
-];
 const ParentListPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
+  const { role } = await getAuthUser();
+  const columns = [
+    {
+      header: "Info",
+      accessor: "info",
+    },
+    {
+      header: "Parent ID",
+      accessor: "id",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Parent Surname",
+      accessor: "surname",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Username",
+      accessor: "username",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Student Names",
+      accessor: "students",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Phone",
+      accessor: "phone",
+      className: "hidden lg:table-cell",
+    },
+    {
+      header: "Address",
+      accessor: "address",
+      className: "hidden lg:table-cell",
+    },
+    ...(role === "admin"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+          },
+        ]
+      : []),
+  ];
+
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page) : 1;
 

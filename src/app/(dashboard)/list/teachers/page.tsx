@@ -11,9 +11,19 @@ import Link from "next/link";
 //type Teacher = { id: number; teacherId: string; name: string; email?: string; photo: string; phone: string; subjects: string[]; classes: string[]; address: string; };
 import { getAuthUser } from "@/lib/utils";
 
-const { role } = await getAuthUser();
 type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
 
+
+// const TeacherListPage = async ({searchParams,}: {searchParams: {[key: string]: string | undefined};}) => {
+//      const {page, ...queryParams} = searchParams;
+//      const p = page ? parseInt(page) : 1;
+
+const TeacherListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+const { role } = await getAuthUser();
 const columns = [
   {
     header: "Info",
@@ -59,15 +69,7 @@ const columns = [
     : []),
 ];
 
-// const TeacherListPage = async ({searchParams,}: {searchParams: {[key: string]: string | undefined};}) => {
-//      const {page, ...queryParams} = searchParams;
-//      const p = page ? parseInt(page) : 1;
-
-const TeacherListPage = async ({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | undefined }>;
-}) => {
+  
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page) : 1;
 

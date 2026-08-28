@@ -8,11 +8,19 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import { getAuthUser } from "@/lib/utils";
 import Image from "next/image";
 
-
-const { role, currentUserId } = await getAuthUser();
+// const { role, currentUserId } = await getAuthUser();
 type AnnouncementList = Announcement & { class: Class };
 
-const columns = [
+
+
+const AnnouncementListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+
+  const { role, currentUserId } = await getAuthUser();
+  const columns = [
   {
     header: "Title",
     accessor: "title",
@@ -36,11 +44,6 @@ const columns = [
     : []),
 ];
 
-const AnnouncementListPage = async ({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | undefined }>;
-}) => {
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page) : 1;
 
@@ -60,19 +63,20 @@ const AnnouncementListPage = async ({
   }
 
   // ROLE CONDITIONS to get data base on the role that login
-  const roleConditions = {
-    teacher: {lessons: {some: {teacherId: currentUserId!}}},
-    student: {students: {some: {id: currentUserId!}}},
-    parent: {students: {some: {parentId: currentUserId!}}}
-  };
+  if (role !== "admin") {
+    const roleConditions = {
+      teacher: { lessons: { some: { teacherId: currentUserId! } } },
+      student: { students: { some: { id: currentUserId! } } },
+      parent: { students: { some: { parentId: currentUserId! } } },
+    };
 
-  query.OR = [
-    {classId: null},
-    {
-      class: roleConditions[role as keyof typeof roleConditions] || {}
-    }
-  ];
-
+    query.OR = [
+      { classId: null },
+      {
+        class: roleConditions[role as keyof typeof roleConditions] || {},
+      },
+    ];
+  }
 
   const [data, count] = await prisma.$transaction([
     prisma.announcement.findMany({

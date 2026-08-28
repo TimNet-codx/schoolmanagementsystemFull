@@ -14,59 +14,56 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
 import { getAuthUser } from "@/lib/utils";
 
-const { role, currentUserId } = await getAuthUser();
 type ExamList = Exam & {
   lesson: { teacher: Teacher; subject: Subject; class: Class };
 };
-
-const columns = [
-  {
-    header: "Subject Name",
-    accessor: "name",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Start Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "End Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  ...(role === "admin" || role == "teacher"
-    ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
-    : []),
-];
 
 const ExamListPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
+  const { role, currentUserId } = await getAuthUser();
+  const columns = [
+    {
+      header: "Subject Name",
+      accessor: "name",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+    },
+    {
+      header: "Teacher",
+      accessor: "teacher",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Start Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "End Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin" || role == "teacher"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+          },
+        ]
+      : []),
+  ];
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page) : 1;
 
-
- 
   const query: Prisma.ExamWhereInput = {};
 
-   query.lesson = {};
-   
+  query.lesson = {};
+
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
@@ -81,7 +78,9 @@ const ExamListPage = async ({
             query.lesson.subjectId = parseInt(value);
             break;
           case "search":
-            query.lesson.subject = { name: { contains: value, mode: "insensitive" } };
+            query.lesson.subject = {
+              name: { contains: value, mode: "insensitive" },
+            };
             break;
           default:
             break;
@@ -90,9 +89,8 @@ const ExamListPage = async ({
     }
   }
 
-
   //ROLE CONDITIONS
-  switch(role){
+  switch (role) {
     case "admin":
       break;
     case "teacher":
@@ -119,8 +117,6 @@ const ExamListPage = async ({
     default:
       break;
   }
-
-
 
   const [data, count] = await prisma.$transaction([
     prisma.exam.findMany({
@@ -161,11 +157,11 @@ const ExamListPage = async ({
       <td>
         <div className="flex items-center gap-2">
           {(role === "admin" || role === "teacher") && (
-              <>
-                <FormModal table="exam" type="update" data={item} />
-                <FormModal table="exam" type="delete" id={item.id} />
-              </>
-            )}
+            <>
+              <FormModal table="exam" type="update" data={item} />
+              <FormModal table="exam" type="delete" id={item.id} />
+            </>
+          )}
         </div>
       </td>
     </tr>
@@ -186,7 +182,7 @@ const ExamListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {(role === "admin" || role === "teacher") && (
-             <FormModal table="exam" type="create" />
+              <FormModal table="exam" type="create" />
             )}
           </div>
         </div>

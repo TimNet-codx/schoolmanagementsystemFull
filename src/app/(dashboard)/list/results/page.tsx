@@ -9,7 +9,6 @@ import Image from "next/image";
 import { title } from "process";
 import { getAuthUser } from "@/lib/utils";
 
-const { role, currentUserId } = await getAuthUser();
 type ResultList = {
   id: number;
   title: string;
@@ -20,6 +19,12 @@ type ResultList = {
   startTime: Date;
 };
 
+const ResultListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+const { role, currentUserId } = await getAuthUser();
 const columns = [
   {
     header: "Title",
@@ -59,11 +64,6 @@ const columns = [
     : []),
 ];
 
-const ResultListPage = async ({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | undefined }>;
-}) => {
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page) : 1;
 
@@ -105,7 +105,7 @@ const ResultListPage = async ({
     case "parent":
       query.student = {
         parentId: currentUserId!,
-      }
+      };
       break;
     default:
       break;

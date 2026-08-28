@@ -10,10 +10,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { getAuthUser } from "@/lib/utils";
 
-const {role } = await getAuthUser();
 type StudentList = Student & { class: Class };
 
-const columns = [
+
+
+const StudentListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+   const { role } = await getAuthUser();
+   const columns = [
   {
     header: "Info",
     accessor: "info",
@@ -63,11 +70,6 @@ const columns = [
     : []),
 ];
 
-const StudentListPage = async ({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | undefined }>;
-}) => {
   const { page, ...queryParams } = await searchParams;
 
   const pageNumber = page ? parseInt(page) : 1;
@@ -136,7 +138,7 @@ const StudentListPage = async ({
       <td>
         <div className="flex items-center gap-2">
           <Link href={`/list/students/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
               <Image src="/view.png" alt="" width={16} height={16} />
             </button>
           </Link>

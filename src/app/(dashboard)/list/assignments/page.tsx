@@ -14,12 +14,19 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import { getAuthUser } from "@/lib/utils";
 import Image from "next/image";
 
-const { currentUserId, role } = await getAuthUser();
 type AssignmentList = Assignment & {
   lesson: { teacher: Teacher; subject: Subject; class: Class };
 };
 
-const columns = [
+
+const AssignmentListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+ const { currentUserId, role } = await getAuthUser();
+
+ const columns = [
   {
     header: "Subject Name",
     accessor: "name",
@@ -48,12 +55,7 @@ const columns = [
     : []),
 ];
 
-const AssignmentListPage = async ({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | undefined }>;
-}) => {
-  //  const { currentUserId, role } = await getAuthUser();
+
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page) : 1;
 
