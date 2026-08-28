@@ -3,11 +3,12 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Parent, Prisma, Student } from "@/generated/prisma/client";
-import { parentsData, role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
+import { getAuthUser } from "@/lib/utils";
 
+const { role } = await getAuthUser();
 type ParentList = Parent & { students: Student[] };
 
 const columns = [
@@ -19,11 +20,13 @@ const columns = [
     header: "Parent ID",
     accessor: "id",
     className: "hidden md:table-cell",
-  },{
+  },
+  {
     header: "Parent Surname",
     accessor: "surname",
     className: "hidden md:table-cell",
-  },{
+  },
+  {
     header: "Username",
     accessor: "username",
     className: "hidden md:table-cell",
@@ -43,35 +46,39 @@ const columns = [
     accessor: "address",
     className: "hidden lg:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 const ParentListPage = async ({
   searchParams,
 }: {
-  searchParams: Promise<{[key: string]: string | undefined}>;
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
- const {page, ...queryParams} =  await searchParams;
- const pageNumber = page ? parseInt(page) : 1;
+  const { page, ...queryParams } = await searchParams;
+  const pageNumber = page ? parseInt(page) : 1;
 
- const query: Prisma.ParentWhereInput = {};
- if(queryParams){
-  for(const [key, value] of Object.entries(queryParams)){
-    if(value !== undefined){
-      switch(key){
-        case "search":
-          query.name = {contains: value, mode:"insensitive"};
-          break;
+  const query: Prisma.ParentWhereInput = {};
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "search":
+            query.name = { contains: value, mode: "insensitive" };
+            break;
           default:
-           break;
+            break;
+        }
       }
     }
   }
- }
 
- const [data, count] = await prisma.$transaction([
+  const [data, count] = await prisma.$transaction([
     prisma.parent.findMany({
       where: query,
       include: {
@@ -81,9 +88,8 @@ const ParentListPage = async ({
       skip: ITEM_PER_PAGE * (pageNumber - 1),
     }),
 
-    prisma.parent.count({where:query})
- ])
-
+    prisma.parent.count({ where: query }),
+  ]);
 
   const renderRow = (item: ParentList) => (
     <tr
@@ -99,12 +105,14 @@ const ParentListPage = async ({
       <td className="hidden md:table-cell">{item.id}</td>
       <td className="hidden md:table-cell">{item.surname}</td>
       <td className="hidden md:table-cell">{item.username}</td>
-      <td className="hidden md:table-cell">{item.students.map((student) => student.name).join(", ")}</td>
+      <td className="hidden md:table-cell">
+        {item.students.map((student) => student.name).join(", ")}
+      </td>
       <td className="hidden md:table-cell">{item.phone}</td>
       <td className="hidden md:table-cell">{item.address}</td>
       <td>
         <div className="flex items-center gap-2">
-          {role.includes("admin") && (
+          {role === "admin" && (
             <>
               <FormModal table="parent" type="update" data={item} />
               <FormModal table="parent" type="delete" id={item.id} />
@@ -129,7 +137,7 @@ const ParentListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role.includes("admin") && <FormModal table="parent" type="create" />}
+            {role === "admin" && <FormModal table="parent" type="create" />}
           </div>
         </div>
       </div>

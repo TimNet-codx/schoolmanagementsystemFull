@@ -3,11 +3,12 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Lesson, Teacher, Class, Subject, Prisma } from "@/generated/prisma/client";
-import { lessonsData, role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
+import { getAuthUser } from "@/lib/utils";
 
+const {role } = await getAuthUser();
 type LessonList = Lesson & {teacher: Teacher} & {class: Class} & {subject: Subject}
 
 const columns = [
@@ -24,10 +25,14 @@ const columns = [
     accessor: "teacher",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const LessonListPage = async ({
@@ -86,7 +91,7 @@ const LessonListPage = async ({
       <td className="hidden md:table-cell">{item.teacher.name + " " + item.teacher.surname}</td>
       <td>
         <div className="flex items-center gap-2">
-          {role.includes("admin") && (
+          {role === "admin" && (
             <>
               <FormModal table="lesson" type="update" data={item} />
               <FormModal table="lesson" type="delete" id={item.id} />
@@ -111,7 +116,7 @@ const LessonListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role.includes("admin") && <FormModal table="lesson" type="create" />}
+            {role === "admin" && <FormModal table="lesson" type="create" />}
           </div>
         </div>
       </div>

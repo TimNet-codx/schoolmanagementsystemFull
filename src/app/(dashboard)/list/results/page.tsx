@@ -1,23 +1,23 @@
-
 import FormModal from "@/components/FromModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma } from "@/generated/prisma/client";
-import {resultsData, role} from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
 import { title } from "process";
+import { getAuthUser } from "@/lib/utils";
 
+const { role, currentUserId } = await getAuthUser();
 type ResultList = {
-   id: number,
-   title: string,
-   studentName: string,
-   teacherName: string,
-   score: number,
-   className: string,
-  startTime: Date,
+  id: number;
+  title: string;
+  studentName: string;
+  teacherName: string;
+  score: number;
+  className: string;
+  startTime: Date;
 };
 
 const columns = [
@@ -49,92 +49,116 @@ const columns = [
     accessor: "date",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin" || role == "teacher"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const ResultListPage = async ({
-    searchParams,
+  searchParams,
 }: {
-    searchParams: Promise<{[key: string] : string | undefined}>
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
+  const { page, ...queryParams } = await searchParams;
+  const pageNumber = page ? parseInt(page) : 1;
 
-    const {page, ...queryParams} = await searchParams;
-    const pageNumber = page ? parseInt(page) : 1;
-
-    const query: Prisma.ResultWhereInput = {};
-    if(queryParams){
-        for(const [key, value] of Object.entries(queryParams)){
-             if(value !== undefined){
-                switch(key){
-                    case "studentId":
-                        query.studentId = value;
-                    break;
-                    case "search" :
-                        query.OR = [
-                            {exam: {title: {contains: value, mode:"insensitive"}}},
-                            {student: {name: {contains: value, mode: "insensitive"}}}
-                        ];
-                        break;
-                        default:
-                        break;        
-                }
-             }
+  const query: Prisma.ResultWhereInput = {};
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "studentId":
+            query.studentId = value;
+            break;
+          case "search":
+            query.OR = [
+              { exam: { title: { contains: value, mode: "insensitive" } } },
+              { student: { name: { contains: value, mode: "insensitive" } } },
+            ];
+            break;
+          default:
+            break;
         }
+      }
     }
+  }
 
-    const [dataResponse, count] = await prisma.$transaction([
-        prisma.result.findMany({
-            where: query,
-            include:{
-                student: {select: {name: true, surname: true}},
-                exam: {
-                    include: {
-                        lesson: {
-                            select: {
-                                class: {select: {name: true}},
-                                teacher: {select: {name: true, surname: true}}
-                            }
-                        }
-                    }
-                },
-                assignment: {
-                    include: {
-                        lesson: {
-                            select: {
-                                class: {select: {name: true}},
-                                teacher: {select: {name: true, surname: true}}
-                            }
-                        }
-                    }
-                },
+  // ROLE CONDITIONS of the data to get base on the role
+
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      query.OR = [
+        { exam: { lesson: { teacherId: currentUserId! } } },
+        { assignment: { lesson: { teacherId: currentUserId! } } },
+      ];
+      break;
+    case "student":
+      query.studentId = currentUserId!;
+      break;
+    case "parent":
+      query.student = {
+        parentId: currentUserId!,
+      }
+      break;
+    default:
+      break;
+  }
+
+  const [dataResponse, count] = await prisma.$transaction([
+    prisma.result.findMany({
+      where: query,
+      include: {
+        student: { select: { name: true, surname: true } },
+        exam: {
+          include: {
+            lesson: {
+              select: {
+                class: { select: { name: true } },
+                teacher: { select: { name: true, surname: true } },
+              },
             },
-            take: ITEM_PER_PAGE,
-            skip: ITEM_PER_PAGE * (pageNumber - 1)
-        }),
-        prisma.result.count({where: query})
-    ]);
+          },
+        },
+        assignment: {
+          include: {
+            lesson: {
+              select: {
+                class: { select: { name: true } },
+                teacher: { select: { name: true, surname: true } },
+              },
+            },
+          },
+        },
+      },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (pageNumber - 1),
+    }),
+    prisma.result.count({ where: query }),
+  ]);
 
-    const data = dataResponse.map((item) => {
-          const assessment = item.exam || item.assignment;
+  const data = dataResponse.map((item) => {
+    const assessment = item.exam || item.assignment;
 
-          if(!assessment) return null;
-          const isExam = "startTime" in assessment;
+    if (!assessment) return null;
+    const isExam = "startTime" in assessment;
 
-          return {
-            id: item.id,
-            title: assessment.title,
-            studentName: `${item.student.name} ${item.student.surname}`,
-            score: item.score,
-            teacherName: `${assessment.lesson.teacher.name} ${assessment.lesson.teacher.surname}`,
-            className: assessment.lesson.class.name,
-            startTime: isExam ? assessment.startTime : assessment.startDate 
-          }
-    });
-
-
+    return {
+      id: item.id,
+      title: assessment.title,
+      studentName: `${item.student.name} ${item.student.surname}`,
+      score: item.score,
+      teacherName: `${assessment.lesson.teacher.name} ${assessment.lesson.teacher.surname}`,
+      className: assessment.lesson.class.name,
+      startTime: isExam ? assessment.startTime : assessment.startDate,
+    };
+  });
 
   const renderRow = (item: ResultList) => (
     <tr
@@ -146,10 +170,12 @@ const ResultListPage = async ({
       <td className="hidden md:table-cell">{item.score}</td>
       <td className="hidden md:table-cell">{item.teacherName}</td>
       <td className="hidden md:table-cell">{item.className}</td>
-     <td className="hidden md:table-cell">{new Intl.DateTimeFormat("en-NG").format(item.startTime)}</td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-NG").format(item.startTime)}
+      </td>
       <td>
         <div className="flex items-center gap-2">
-          {role.includes("admin") || role.includes("teacher") && (
+          {(role === "admin" || role === "teacher") && (
             <>
               <FormModal table="result" type="update" data={item} />
               <FormModal table="result" type="delete" id={item.id} />
@@ -174,7 +200,9 @@ const ResultListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role.includes("admin") || role.includes("teacher") && <FormModal table="result" type="create" />}
+            {(role === "admin" || role === "teacher") && (
+              <FormModal table="result" type="create" />
+            )}
           </div>
         </div>
       </div>

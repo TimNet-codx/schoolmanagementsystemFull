@@ -4,11 +4,12 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Event, Class, Prisma } from "@/generated/prisma/client";
-import { eventsData, role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
+import {getAuthUser } from "@/lib/utils";
 
+const {role, currentUserId } = await getAuthUser();
 type EventList = Event & {class: Class}
 
 const columns = [
@@ -35,10 +36,14 @@ const columns = [
     accessor: "endTime",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const EventListPage = async ({
@@ -64,6 +69,21 @@ const EventListPage = async ({
       }
    }
 
+  // ROLE CONDITIONS to get data base on the role that login
+  const roleConditions = {
+    teacher: {lessons: {some: {teacherId: currentUserId!}}},
+    student: {students: {some: {id: currentUserId!}}},
+    parent: {students: {some: {parentId: currentUserId!}}}
+  };
+
+  query.OR = [
+    {classId: null},
+    {
+      class: roleConditions[role as keyof typeof roleConditions] || {}
+    }
+  ];
+
+
    const [data, count] = await prisma.$transaction([
       prisma.event.findMany({
         where: query,
@@ -82,13 +102,13 @@ const EventListPage = async ({
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
       <td className="flex items-center gap-4 p-4">{item.title}</td>
-      <td>{item.class.name}</td>
+      <td>{item.class?.name || "-"}</td>
           <td className="hidden md:table-cell">{new Intl.DateTimeFormat("en-NG").format(item.startTime)}</td>
       <td className="hidden md:table-cell">{item.startTime.toLocaleTimeString("en-NG", { hour: '2-digit', minute: '2-digit', hour12: false })}</td>
       <td className="hidden md:table-cell">{item.endTime.toLocaleTimeString("en-NG", { hour: '2-digit', minute: '2-digit', hour12: false })}</td>
       <td>
         <div className="flex items-center gap-2">
-          {role.includes("admin") && (
+          {role === "admin" && (
             <>
               <FormModal table="event" type="update" data={item} />
               <FormModal table="event" type="delete" id={item.id} />
@@ -113,7 +133,7 @@ const EventListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role.includes("admin") && <FormModal table="event" type="create" />}
+            {role === "admin" && <FormModal table="event" type="create" />}
           </div>
         </div>
       </div>

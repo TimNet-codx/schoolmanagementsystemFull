@@ -83,7 +83,7 @@ const AssignmentListPage = async ({
     }
   }
 
-  // ROLE CONDITIONS
+  // ROLE CONDITIONS of the data to get base on the role
   switch (role) {
     case "admin":
       break;

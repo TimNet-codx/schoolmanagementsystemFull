@@ -3,11 +3,12 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Prisma, Subject, Teacher } from "@/generated/prisma/client";
-import { role, subjectsData } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
+import { getAuthUser } from "@/lib/utils";
 
+const { role } = await getAuthUser();
 type SubjectList = Subject & { teachers: Teacher[] };
 
 const columns = [
@@ -20,11 +21,14 @@ const columns = [
     accessor: "teachers",
     className: "hidden md:table-cell",
   },
-
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const SubjectListPage = async ({
@@ -75,7 +79,7 @@ const SubjectListPage = async ({
       </td>
       <td>
         <div className="flex items-center gap-2">
-          {role.includes("admin") && (
+          {role === "admin" && (
             <>
               <FormModal table="subject" type="update" data={item} />
               <FormModal table="subject" type="delete" id={item.id} />
@@ -100,7 +104,7 @@ const SubjectListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role.includes("admin") && <FormModal table="subject" type="create" />}
+            {role === "admin" && <FormModal table="subject" type="create" />}
           </div>
         </div>
       </div>

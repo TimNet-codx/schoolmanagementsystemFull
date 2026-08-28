@@ -3,14 +3,15 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { Teacher, Subject, Class, Prisma } from "@/generated/prisma/client";
-import { role, teachersData } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 // import { console } from "inspector/promises";
 import Image from "next/image";
 import Link from "next/link";
 //type Teacher = { id: number; teacherId: string; name: string; email?: string; photo: string; phone: string; subjects: string[]; classes: string[]; address: string; };
+import { getAuthUser } from "@/lib/utils";
 
+const { role } = await getAuthUser();
 type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
 
 const columns = [
@@ -48,10 +49,14 @@ const columns = [
     accessor: "address",
     className: "hidden lg:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 // const TeacherListPage = async ({searchParams,}: {searchParams: {[key: string]: string | undefined};}) => {
@@ -152,7 +157,7 @@ const TeacherListPage = async ({
             </button>
           </Link>
 
-          {role.includes("admin") && (
+          {role === "admin" && (
             // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
             //   <Image src="/delete.png" alt="" width={16} height={16} />
             // </button>
@@ -177,7 +182,7 @@ const TeacherListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full  bg-[#FAE27C]">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role.includes("admin") && (
+            {role === "admin" && (
               //    <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               //  <Image src="/plus.png" alt="" width={14} height={14} />
               //  </button>
