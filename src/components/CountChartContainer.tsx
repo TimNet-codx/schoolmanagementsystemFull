@@ -13,7 +13,7 @@ const CountChartContainer = async () => {
     by: ["sex"],
     _count: true,
   });
-  console.log(data);
+  //   console.log(data);
   const boys = data.find((g) => g.sex === "MALE")?._count || 0;
   const girls = data.find((g) => g.sex === "FEMALE")?._count || 0;
   return (
@@ -30,12 +30,16 @@ const CountChartContainer = async () => {
         <div className="flex flex-col gap-1">
           <div className="w-5 h-5 bg-[#C3EBFA] rounded-full" />
           <h1 className="font-bold">{boys}</h1>
-          <h2 className="text-xs text-gray-300">Boys ({Math.round((boys / (boys + girls)) * 100)}%)</h2>
+          <h2 className="text-xs text-gray-300">
+            Boys ({Math.round((boys / (boys + girls)) * 100)}%)
+          </h2>
         </div>
         <div className="flex flex-col gap-1">
           <div className="w-5 h-5 bg-[#FAE27C] rounded-full" />
           <h1 className="font-bold">{girls}</h1>
-          <h2 className="text-xs text-gray-300">Girls ({Math.round((girls / (girls + boys)) * 100)}%)</h2>
+          <h2 className="text-xs text-gray-300">
+            Girls ({Math.round((girls / (girls + boys)) * 100)}%)
+          </h2>
         </div>
       </div>
     </div>
