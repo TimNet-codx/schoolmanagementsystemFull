@@ -1,4 +1,3 @@
-import FormModal from "@/components/FromModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -10,6 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 //type Teacher = { id: number; teacherId: string; name: string; email?: string; photo: string; phone: string; subjects: string[]; classes: string[]; address: string; };
 import { getAuthUser } from "@/lib/utils";
+import FormContainer from "@/components/FormContainer";
 
 type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
 
@@ -163,7 +163,7 @@ const columns = [
             // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
             //   <Image src="/delete.png" alt="" width={16} height={16} />
             // </button>
-            <FormModal table="teacher" type="delete" id={item.id} />
+            <FormContainer table="teacher" type="delete" id={item.id} />
           )}
         </div>
       </td>
@@ -188,7 +188,7 @@ const columns = [
               //    <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               //  <Image src="/plus.png" alt="" width={14} height={14} />
               //  </button>
-              <FormModal table="teacher" type="create" />
+              <FormContainer table="teacher" type="create" />
             )}
           </div>
         </div>
