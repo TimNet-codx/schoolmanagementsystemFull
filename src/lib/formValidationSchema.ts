@@ -42,7 +42,7 @@ export const teacherSchema = z.object({
     .regex(/^[a-zA-Z0-9]+$/, {
       message: "Password must contain numbers, least one uppercase, and uppercase letter",
     })
-    .regex(/[0-9]/, { message: "Password must contain at least one number" }),
+    .regex(/[0-9]/, { message: "Password must contain at least one number" }).optional(),
   name: z.string().min(1, { message: "First name is required!" }),
   surname: z.string().min(1, { message: "Last name is required!" }),
   email: z
