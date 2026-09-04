@@ -22,6 +22,16 @@ export const classSchema = z.object({
 
 export type ClassSchema = z.infer<typeof classSchema>;
 
+// Exam Schema
+export const examSchema = z.object({
+  id: z.coerce.number().optional(),
+  title: z.string().min(1, { message: "Title name is required" }),
+  startTime: z.coerce.date({ message: "Start time is required" }),
+  endTime: z.coerce.date({ message: "End time is required" }),
+  lessonId: z.coerce.number({ message: "Lesson is required" }),
+});
+export type ExamSchema = z.infer<typeof examSchema>;
+
 // Teacher Schema
 export const teacherSchema = z.object({
   id: z.string().optional(),
@@ -36,13 +46,43 @@ export const teacherSchema = z.object({
     .regex(/^[a-zA-Z0-9_-]+$/, {
       message: "Username can only contain letters, numbers, - or _",
     }),
+  // password: z
+  //   .string()
+  //   .min(8, { message: "Password must be at least 8 characters long!" })
+  //   .regex(/^[a-zA-Z0-9]+$/, {
+  //     message: "Password must contain numbers, least one uppercase, and uppercase letter",
+  //   })
+  //   .regex(/[0-9]/, { message: "Password must contain at least one number" }).optional(),
+  // password: z
+  //   .string()
+  //   .optional()
+  //   .refine(
+  //     (val) => {
+  //       if (!val || val === "") return true; // Pass if empty (optional on update)
+  //       return (
+  //         val.length >= 8 &&
+  //         /[a-z]/.test(val) &&
+  //         /[A-Z]/.test(val) &&
+  //         /[0-9]/.test(val)
+  //       );
+  //     },
+  //     {
+  //       message:
+  //         "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number!",
+  //     },
+  //   ),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters long!" })
-    .regex(/^[a-zA-Z0-9]+$/, {
-      message: "Password must contain numbers, least one uppercase, and uppercase letter",
+    .regex(/[a-z]/, {
+      message: "Password must contain at least one lowercase letter!",
     })
-    .regex(/[0-9]/, { message: "Password must contain at least one number" }).optional(),
+    .regex(/[A-Z]/, {
+      message: "Password must contain at least one uppercase letter!",
+    })
+    .regex(/[0-9]/, { message: "Password must contain at least one number!" })
+    .or(z.literal(""))
+    .optional(),
   name: z.string().min(1, { message: "First name is required!" }),
   surname: z.string().min(1, { message: "Last name is required!" }),
   email: z
@@ -63,3 +103,90 @@ export const teacherSchema = z.object({
 });
 
 export type TeacherSchema = z.infer<typeof teacherSchema>;
+
+// Student Schema
+export const studentSchema = z.object({
+  id: z.string().optional(),
+  // username: z
+  //   .string()
+  //   .min(3, { message: "Username must be at least 3 characters long!" })
+  //   .max(20, { message: "Username must be at most 20 characters long!" }),
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters long!" })
+    .max(20, { message: "Username must be at most 20 characters long!" })
+    .regex(/^[a-zA-Z0-9_-]+$/, {
+      message: "Username can only contain letters, numbers, - or _",
+    }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long!" })
+    .regex(/[a-z]/, {
+      message: "Password must contain at least one lowercase letter!",
+    })
+    .regex(/[A-Z]/, {
+      message: "Password must contain at least one uppercase letter!",
+    })
+    .regex(/[0-9]/, { message: "Password must contain at least one number!" })
+    .or(z.literal(""))
+    .optional(),
+  name: z.string().min(1, { message: "First name is required!" }),
+  surname: z.string().min(1, { message: "Last name is required!" }),
+  email: z
+    .string()
+    .email({ message: "Invalid email address!" })
+    .optional()
+    .or(z.literal("")),
+  // phone: z.string().min(1, { message: "Phone is required!" }),
+  // address: z.string().min(1, { message: "Address is required!" }),
+  phone: z.string().min(1, { message: "Phone is required!" }),
+  address: z.string(),
+  bloodType: z.string().min(1, { message: "Blood Type is required!" }),
+  birthday: z.coerce.date({ message: "Birthday is required!" }),
+  sex: z.enum(["MALE", "FEMALE"], { message: "Sex is required!" }),
+  // img: z.instanceof(File, { message: "Image is required" }),
+  // img: z.string().optional(),
+  img: z.string().optional().nullable().or(z.literal("")),
+  gradeId: z.coerce.number().min(1, { message: "Grade is required!" }),
+  classId: z.coerce.number().min(1, { message: "Class is required!" }),
+  parentId: z.string().min(1, { message: "Parent ID is required!" }),
+});
+
+export type StudentSchema = z.infer<typeof studentSchema>;
+
+// Parent Schema
+export const parentSchema = z.object({
+  id: z.string().optional(),
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters long!" })
+    .max(20, { message: "Username must be at most 20 characters long!" })
+    .regex(/^[a-zA-Z0-9_-]+$/, {
+      message: "Username can only contain letters, numbers, - or _",
+    }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long!" })
+    .regex(/[a-z]/, {
+      message: "Password must contain at least one lowercase letter!",
+    })
+    .regex(/[A-Z]/, {
+      message: "Password must contain at least one uppercase letter!",
+    })
+    .regex(/[0-9]/, { message: "Password must contain at least one number!" })
+    .or(z.literal(""))
+    .optional(),
+  name: z.string().min(1, { message: "First name is required!" }),
+  surname: z.string().min(1, { message: "Last name is required!" }),
+  email: z
+    .string()
+    .email({ message: "Invalid email address!" })
+    .optional()
+    .or(z.literal("")),
+  phone: z.string().min(1, { message: "Phone is required!" }),
+  address: z.string(),
+  sex: z.enum(["MALE", "FEMALE"], { message: "Sex is required!" }),
+  students: z.array(z.string()).optional(),
+});
+
+export type ParentSchema = z.infer<typeof parentSchema>;

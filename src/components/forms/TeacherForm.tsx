@@ -29,21 +29,26 @@ const TeacherForm = ({
   setOpen: Dispatch<SetStateAction<boolean>>;
   relatedData?: any;
 }) => {
+  const formattedBirthday = data?.birthday
+    ? new Date(data.birthday).toISOString().split("T")[0]
+    : "";
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<TeacherSchema>({
     resolver: zodResolver(teacherSchema) as any,
-    defaultValues: data,
+    defaultValues: {
+      ...data,
+      birthday: formattedBirthday,
+    },
   });
 
   const [img, setImg] = useState<any>();
 
-  const [state, formAction] = useActionState<
-    { success: boolean; error: boolean; message?: string | undefined },
-    TeacherSchema
-  >(type === "create" ? createTeacher : updateTeacher, {
+  const [state, formAction] = useActionState<{ success: boolean; error: boolean; message?: string | undefined },TeacherSchema>(
+    type === "create" ? createTeacher : updateTeacher, {
     success: false,
     error: false,
     message: undefined,
@@ -101,7 +106,7 @@ const TeacherForm = ({
           error={errors?.email}
         />
         <InputField
-          label="Password"
+          label="Password (Demo1234)"
           name="password"
           type="password"
           defaultValue={data?.password}

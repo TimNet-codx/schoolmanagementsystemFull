@@ -17,7 +17,7 @@ const SingleTeacherPage = async ({
 }) => {
   const { id } = await params;
   const { role } = await getAuthUser();
-  const teacher: Teacher & { _count: { subjects: number; lessons: number; classes: number } } | null = await prisma.teacher.findUnique({
+  const teacher: | Teacher & { _count: { subjects: number; lessons: number; classes: number } } | null = await prisma.teacher.findUnique({
     where: { id },
     include:{
       subjects: true,

@@ -1,4 +1,3 @@
-import FormModal from "@/components/FromModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -13,6 +12,7 @@ import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
 import { getAuthUser } from "@/lib/utils";
+import FormContainer from "@/components/FormContainer";
 
 type ExamList = Exam & {
   lesson: { teacher: Teacher; subject: Subject; class: Class };
@@ -40,12 +40,12 @@ const ExamListPage = async ({
     },
     {
       header: "Start Date",
-      accessor: "date",
+      accessor: "startTime",
       className: "hidden md:table-cell",
     },
     {
       header: "End Date",
-      accessor: "date",
+      accessor: "endTime",
       className: "hidden md:table-cell",
     },
     ...(role === "admin" || role == "teacher"
@@ -158,8 +158,8 @@ const ExamListPage = async ({
         <div className="flex items-center gap-2">
           {(role === "admin" || role === "teacher") && (
             <>
-              <FormModal table="exam" type="update" data={item} />
-              <FormModal table="exam" type="delete" id={item.id} />
+              <FormContainer table="exam" type="update" data={item} />
+              <FormContainer table="exam" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -182,7 +182,7 @@ const ExamListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {(role === "admin" || role === "teacher") && (
-              <FormModal table="exam" type="create" />
+              <FormContainer table="exam" type="create" />
             )}
           </div>
         </div>

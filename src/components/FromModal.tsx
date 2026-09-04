@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteClass, deleteSubject, deleteTeacher } from "@/lib/serverAction";
+import { deleteClass, deleteExam, deleteParent, deleteStudent, deleteSubject, deleteTeacher } from "@/lib/serverAction";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -24,10 +24,10 @@ const deleteActionMap = {
   subject: deleteSubject,
   class: deleteClass,
   teacher: deleteTeacher,
-  student: deleteSubject,
-  parent: deleteSubject,
+  student: deleteStudent,
+  parent: deleteParent,
   lesson: deleteSubject,
-  exam: deleteSubject,
+  exam: deleteExam,
   assignment: deleteSubject,
   result: deleteSubject,
   attendance: deleteSubject,
@@ -50,6 +50,9 @@ const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
 const ClassForm = dynamic(() => import("./forms/ClassForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const ExamForm = dynamic(() => import("./forms/ExamForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (
@@ -67,8 +70,8 @@ const forms: {
       relatedData={relatedData}
     />
   ),
-  student: (setOpen, type, data) => <StudentForm type={type} data={data} />,
-  parent: (setOpen, type, data) => <ParentForm type={type} data={data} />,
+  student: (setOpen, type, data, relatedData) => <StudentForm setOpen={setOpen} type={type} data={data}  relatedData={relatedData} />,
+  parent: (setOpen, type, data, relatedData) => <ParentForm setOpen={setOpen} type={type} data={data} relatedData={relatedData}  />,
   subject: (setOpen, type, data, relatedData) => (
     <SubjectForm
       setOpen={setOpen}
@@ -79,6 +82,14 @@ const forms: {
   ),
   class: (setOpen, type, data, relatedData) => (
     <ClassForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
+  exam: (setOpen, type, data, relatedData) => (
+    <ExamForm
       setOpen={setOpen}
       type={type}
       data={data}
@@ -113,7 +124,7 @@ const FormModal = ({
     const router = useRouter();
     useEffect(() => {
       if (state.success) {
-        toast(`Data has been deleted! `);
+        toast(`${table} has been deleted! `);
         setOpen(false);
         router.refresh();
       }
