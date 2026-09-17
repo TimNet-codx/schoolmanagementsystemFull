@@ -1,4 +1,3 @@
-import FormModal from "@/components/FromModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -8,6 +7,7 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import Image from "next/image";
 import { title } from "process";
 import { getAuthUser } from "@/lib/utils";
+import FormContainer from "@/components/FormContainer";
 
 type ResultList = {
   id: number;
@@ -27,7 +27,7 @@ const ResultListPage = async ({
 const { role, currentUserId } = await getAuthUser();
 const columns = [
   {
-    header: "Title",
+    header: "Assessment Type",
     accessor: "title",
   },
   {
@@ -177,8 +177,8 @@ const columns = [
         <div className="flex items-center gap-2">
           {(role === "admin" || role === "teacher") && (
             <>
-              <FormModal table="result" type="update" data={item} />
-              <FormModal table="result" type="delete" id={item.id} />
+              <FormContainer table="result" type="update" data={item} />
+              <FormContainer table="result" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -201,7 +201,7 @@ const columns = [
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {(role === "admin" || role === "teacher") && (
-              <FormModal table="result" type="create" />
+              <FormContainer table="result" type="create" />
             )}
           </div>
         </div>

@@ -26,8 +26,24 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
   let relatedData = {};
   let fetchedData = data;
 
+  // 1. Fetch authentication once for the component
+  const { userId, sessionClaims } = await auth();
+  const role = (
+    sessionClaims?.metadata as {
+      role?: "admin" | "teacher" | "student" | "parent";
+    }
+  )?.role;
+
   // If the type is not delete, fetch related data based on the table type
+  // 2. Fetch related data if performing create or update operations
   if (type !== "delete") {
+    // condition for teacher should only add exams for their own subjects and classes, admin can add exams for all subjects and classes
+    // const { userId, sessionClaims } = await auth();
+    // const role = (
+    //   sessionClaims?.metadata as {
+    //     role?: "admin" | "teacher" | "student" | "parent";
+    //   }
+    // )?.role;
     switch (table) {
       case "subject":
         const subjectTeachers = await prisma.teacher.findMany({
@@ -59,7 +75,7 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         });
         relatedData = { grades: studentGrades, classes: studentClasses };
         break;
-     case "parent":
+      case "parent":
         // 1. Fetch ALL students for the dropdown options list
         const parentStudents = await prisma.student.findMany({
           select: { id: true, name: true, surname: true },
@@ -80,12 +96,12 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         break;
       case "exam":
         // condition for teacher should only add exams for their own subjects and classes, admin can add exams for all subjects and classes
-        const { userId, sessionClaims } = await auth();
-        const role = (
-          sessionClaims?.metadata as {
-            role?: "admin" | "teacher" | "student" | "parent";
-          }
-        )?.role;
+        // const { userId, sessionClaims } = await auth();
+        // const role = (
+        //   sessionClaims?.metadata as {
+        //     role?: "admin" | "teacher" | "student" | "parent";
+        //   }
+        // )?.role;
         const examLessons = await prisma.lesson.findMany({
           where: {
             // if the user is a teacher, only show lessons for that teacher, userId is the lesson id, if the user is an admin, show all lessons
@@ -94,6 +110,67 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
           select: { id: true, name: true },
         });
         relatedData = { lessons: examLessons };
+        break;
+      case "assignment":
+        // // condition for teacher should only add assignments for their own subjects and classes, admin can add assignments for all subjects and classes
+        // const { userId, sessionClaims } = await auth();
+        // const role = (
+        //   sessionClaims?.metadata as {
+        //     role?: "admin" | "teacher" | "student" | "parent";
+        //   }
+        // )?.role;
+        const assignmentLessons = await prisma.lesson.findMany({
+          where: {
+            // if the user is a teacher, only show lessons for that teacher, userId is the lesson id, if the user is an admin, show all lessons
+            ...(role === "teacher" ? { teacherId: userId! } : {}),
+          },
+          select: { id: true, name: true },
+        });
+        relatedData = { lessons: assignmentLessons };
+        break;
+      case "lesson":
+        const lessonSubjects = await prisma.subject.findMany({
+          select: { id: true, name: true },
+        });
+        const lessonClasses = await prisma.class.findMany({
+          select: { id: true, name: true },
+        });
+        const lessonTeachers = await prisma.teacher.findMany({
+          select: { id: true, name: true, surname: true },
+        });
+        relatedData = {
+          subjects: lessonSubjects,
+          classes: lessonClasses,
+          teachers: lessonTeachers,
+        };
+        break;
+      case "result":
+        const resultStudents = await prisma.student.findMany({
+          select: { id: true, name: true, surname: true },
+        });
+        const resultExams = await prisma.exam.findMany({
+          select: { id: true, title: true },
+        });
+        const resultAssignments = await prisma.assignment.findMany({
+          select: { id: true, title: true },
+        });
+        relatedData = {
+          students: resultStudents,
+          exams: resultExams,
+          assignments: resultAssignments,
+        };
+        break;
+      case "event":
+        const eventClasses = await prisma.class.findMany({
+          select: { id: true, name: true },
+        });
+        relatedData = { classes: eventClasses };
+        break;
+      case "announcement":
+        const announcementClasses = await prisma.class.findMany({
+          select: { id: true, name: true },
+        });
+        relatedData = { classes: announcementClasses };
         break;
       default:
         break;

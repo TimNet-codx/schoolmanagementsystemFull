@@ -3,8 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import InputField from "../InputField";
-import { examSchema, ExamSchema } from "@/lib/formValidationSchema";
-import { createExam, updateExam } from "@/lib/serverAction";
+import { assignmentSchema, AssignmentSchema } from "@/lib/formValidationSchema";
+import { createAssignment, updateAssignment } from "@/lib/serverAction";
 import {
   Dispatch,
   SetStateAction,
@@ -15,7 +15,7 @@ import {
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
-const ExamForm = ({
+const AssignmentForm = ({
   type,
   data,
   setOpen,
@@ -26,25 +26,28 @@ const ExamForm = ({
   setOpen: Dispatch<SetStateAction<boolean>>;
   relatedData?: any;
 }) => {
-  const startTimeFormatt = data?.startTime ? new Date(data.startTime).toISOString().slice(0, 16) : "";
+  const startDateFormatt = data?.startDate
+    ? new Date(data.startDate).toISOString().slice(0, 16)
+    : "";
 
-  const endTimeFormatt = data?.endTime ? new Date(data.endTime).toISOString().slice(0, 16) : "";
-
+  const endDateFormatt = data?.dueDate
+    ? new Date(data.dueDate).toISOString().slice(0, 16)
+    : "";
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ExamSchema>({
-    resolver: zodResolver(examSchema) as any,
+  } = useForm<AssignmentSchema>({
+    resolver: zodResolver(assignmentSchema) as any,
     defaultValues: {
       ...data,
-      startTime: startTimeFormatt,
-      endTime: endTimeFormatt,
+      startDate: startDateFormatt,
+      dueDate: endDateFormatt,
     },
   });
 
   const [state, formAction] = useActionState(
-    type === "create" ? createExam : updateExam,
+    type === "create" ? createAssignment : updateAssignment,
     { success: false, error: false },
   );
 
@@ -58,7 +61,7 @@ const ExamForm = ({
   const router = useRouter();
   useEffect(() => {
     if (state.success) {
-      toast(`Exam has been ${type === "create" ? "create" : "updated"}!`);
+      toast(`Assignment has been ${type === "create" ? "create" : "updated"}!`);
       setOpen(false);
       router.refresh();
     }
@@ -71,7 +74,7 @@ const ExamForm = ({
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
-        {type === "create" ? "Create new Exam" : "Update the exam"}
+        {type === "create" ? "Create new Assignment" : "Update the Assignment"}
       </h1>
       <div className="flex justify-between flex-wrap gap-4">
         {data?.id && (
@@ -85,7 +88,7 @@ const ExamForm = ({
           />
         )}
         <InputField
-          label="Exam Title"
+          label="Assignment Title"
           name="title"
           defaultValue={data?.title}
           register={register}
@@ -93,26 +96,26 @@ const ExamForm = ({
         />
         <InputField
           label="Start Date"
-          name="startTime"
+          name="startDate"
           defaultValue={
-            data?.startTime
-              ? new Date(data.startTime).toISOString().slice(0, 16)
+            data?.startDate
+              ? new Date(data.startDate).toISOString().slice(0, 16)
               : ""
           }
           register={register}
-          error={errors?.startTime}
+          error={errors?.startDate}
           type="datetime-local"
         />
         <InputField
-          label="End Date"
-          name="endTime"
+          label="Due Date"
+          name="dueDate"
           defaultValue={
-            data?.endTime
-              ? new Date(data.endTime).toISOString().slice(0, 16)
+            data?.dueDate
+              ? new Date(data.dueDate).toISOString().slice(0, 16)
               : ""
           }
           register={register}
-          error={errors?.endTime}
+          error={errors?.dueDate}
           type="datetime-local"
         />
         <div className="flex flex-col gap-2 w-full md:w-1/4">
@@ -145,4 +148,4 @@ const ExamForm = ({
   );
 };
 
-export default ExamForm;
+export default AssignmentForm;

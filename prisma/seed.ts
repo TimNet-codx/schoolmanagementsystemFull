@@ -225,7 +225,7 @@ async function main() {
 }
 
 main()
-  .then(async () => {
+ .then(async () => {
     console.log("✅ Seed finished");
     await prisma.$disconnect();
   })

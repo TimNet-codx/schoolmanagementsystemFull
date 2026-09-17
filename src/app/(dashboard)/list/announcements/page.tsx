@@ -1,4 +1,4 @@
-import FormModal from "@/components/FromModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -11,38 +11,35 @@ import Image from "next/image";
 // const { role, currentUserId } = await getAuthUser();
 type AnnouncementList = Announcement & { class: Class };
 
-
-
 const AnnouncementListPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
-
   const { role, currentUserId } = await getAuthUser();
   const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  ...(role === "admin"
-    ? [
-        {
-          header: "Actions",
-          accessor: "action",
-        },
-      ]
-    : []),
-];
+    {
+      header: "Title",
+      accessor: "title",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+          },
+        ]
+      : []),
+  ];
 
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page) : 1;
@@ -102,10 +99,14 @@ const AnnouncementListPage = async ({
       </td>
       <td>
         <div className="flex items-center gap-2">
-          {role == "admin" && (
+          {role === "admin" && (
             <>
-              <FormModal table="announcement" type="update" data={item.id} />
-              <FormModal table="announcement" type="delete" id={item.id} />
+              <FormContainer
+                table="announcement"
+                type="update"
+                data={item.id}
+              />
+              <FormContainer table="announcement" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -129,8 +130,8 @@ const AnnouncementListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role == "admin" && (
-              <FormModal table="announcement" type="create" />
+            {role === "admin" && (
+              <FormContainer table="announcement" type="create" />
             )}
           </div>
         </div>

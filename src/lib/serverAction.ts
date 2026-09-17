@@ -2,9 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  announcementSchema,
+  AnnouncementSchema,
+  assignmentSchema,
+  AssignmentSchema,
   ClassSchema,
+  eventSchema,
+  EventSchema,
+  examSchema,
   ExamSchema,
+  lessonSchema,
+  LessonSchema,
   ParentSchema,
+  resultSchema,
+  ResultSchema,
   StudentSchema,
   SubjectSchema,
   TeacherSchema,
@@ -14,7 +25,7 @@ import { success } from "zod";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { error } from "console";
 
-type CurrentState = { success: boolean; error: boolean };
+type CurrentState = { success: boolean; error: boolean; message?: string };
 
 // Subject Actions
 export const createSubject = async (
@@ -44,7 +55,7 @@ export const updateSubject = async (
   data: SubjectSchema,
 ) => {
   if (!data.id) {
-    return { success: false, error: true };
+    return { success: false, error: true, message: "Id not found" };
   }
   try {
     await prisma.subject.update({
@@ -159,17 +170,56 @@ export const deleteClass = async (
 };
 
 // Exam Actions
+// export const createExam = async (
+//   currentState: CurrentState,
+//   data: ExamSchema,
+// ) => {
+//   // condition for teacher should only add exams for their own subjects and classes, admin can add exams for all subjects and classes
+//   const { userId, sessionClaims } = await auth();
+//   const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+//   try {
+//     if (role === "teacher") {
+//       // if lesson  belong to us we can an exam
+//       const teacherLesson = await prisma.lesson.findFirst({
+//         where: {
+//           teacherId: userId!,
+//           id: data.lessonId,
+//         },
+//       });
+
+//       if (!teacherLesson) {
+//         return { success: false, error: true, message: "Lesson not found" };
+//       }
+
+//       await prisma.exam.create({
+//         data: {
+//           title: data.title,
+//           startTime: data.startTime,
+//           endTime: data.endTime,
+//           lessonId: data.lessonId,
+//         },
+//       });
+//     }
+
+//     // revalidatePath("/list/subjects");
+//     return { success: true, error: false };
+//   } catch (error) {
+//     // console.log(error);
+//     return { success: false, error: true };
+//   }
+// };
+
 export const createExam = async (
   currentState: CurrentState,
   data: ExamSchema,
 ) => {
-  // condition for teacher should only add exams for their own subjects and classes, admin can add exams for all subjects and classes
   const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
 
   try {
+    // 1. If teacher, verify they own the lesson
     if (role === "teacher") {
-      // if lesson  belong to us we can an exam
       const teacherLesson = await prisma.lesson.findFirst({
         where: {
           teacherId: userId!,
@@ -178,65 +228,128 @@ export const createExam = async (
       });
 
       if (!teacherLesson) {
-        return { success: false, error: true, message: "Lesson not found" };
+        return {
+          success: false,
+          error: true,
+          message: "Lesson not found or unauthorized",
+        };
       }
-
-      await prisma.exam.create({
-        data: {
-          title: data.title,
-          startTime: data.startTime,
-          endTime: data.endTime,
-          lessonId: data.lessonId,
-        },
-      });
     }
 
-    // revalidatePath("/list/subjects");
+    // 2. Create the exam (Runs for BOTH admin and teacher)
+    await prisma.exam.create({
+      data: {
+        title: data.title,
+        startTime: new Date(data.startTime),
+        endTime: new Date(data.endTime),
+        lessonId: data.lessonId,
+      },
+    });
+
+    // revalidatePath("/list/exams");
     return { success: true, error: false };
-  } catch (error) {
-    // console.log(error);
-    return { success: false, error: true };
+  } catch (error: any) {
+    console.error("Create Exam Error:", error);
+    return { success: false, error: true, message: error.message };
   }
 };
 
+// export const updateExam = async (
+//   currentState: CurrentState,
+//   data: ExamSchema,
+// ) => {
+//   // condition for teacher should only add exams for their own subjects and classes, admin can add exams for all subjects and classes
+//   const { userId, sessionClaims } = await auth();
+//   const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+//   try {
+//     if (role === "teacher") {
+//       // if lesson  belong to us we can an exam
+//       const teacherLesson = await prisma.lesson.findFirst({
+//         where: {
+//           teacherId: userId!,
+//           id: data.lessonId,
+//         },
+//       });
+
+//       if (!teacherLesson) {
+//         return { success: false, error: true, message: "Lesson not found" };
+//       }
+
+//       await prisma.exam.update({
+//         where: { id: data.id },
+//         data: {
+//           title: data.title,
+//           startTime: new Date(data.startTime),
+//           endTime: new Date(data.endTime),
+//           lessonId: data.lessonId,
+//         },
+//       });
+//     }
+
+//     // revalidatePath("/list/subjects");
+//     return { success: true, error: false };
+//   } catch (error) {
+//     // console.log(error);
+//     return { success: false, error: true };
+//   }
+// };
 export const updateExam = async (
   currentState: CurrentState,
   data: ExamSchema,
 ) => {
-  // condition for teacher should only add exams for their own subjects and classes, admin can add exams for all subjects and classes
   const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
 
+  // 1. Validate ID exists
+  if (!data.id) {
+    return { success: false, error: true, message: "Exam ID is missing" };
+  }
+
+  // 2. Validate input schema
+  const validatedFields = examSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
   try {
+    const { id, title, startTime, endTime, lessonId } = validatedFields.data;
+
+    // 3. If teacher, verify they own the lesson
     if (role === "teacher") {
-      // if lesson  belong to us we can an exam
       const teacherLesson = await prisma.lesson.findFirst({
         where: {
           teacherId: userId!,
-          id: data.lessonId,
+          id: lessonId,
         },
       });
 
       if (!teacherLesson) {
-        return { success: false, error: true, message: "Lesson not found" };
+        return {
+          success: false,
+          error: true,
+          message: "Lesson not found or unauthorized",
+        };
       }
-
-      await prisma.exam.update({
-        where: { id: data.id },
-        data: {
-          title: data.title,
-          startTime: data.startTime,
-          endTime: data.endTime,
-          lessonId: data.lessonId,
-        },
-      });
     }
 
-    // revalidatePath("/list/subjects");
+    // 4. Update the exam in DB (Executes for BOTH admin and teacher)
+    await prisma.exam.update({
+      where: { id },
+      data: {
+        title,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        lessonId,
+      },
+    });
+
+    // 5. Revalidate cache so UI instantly updates
+    // revalidatePath("/list/exams");
     return { success: true, error: false };
-  } catch (error) {
-    // console.log(error);
-    return { success: false, error: true };
+  } catch (error: any) {
+    console.error("Update Exam Error:", error);
+    return { success: false, error: true, message: error.message };
   }
 };
 
@@ -261,6 +374,447 @@ export const deleteExam = async (
   } catch (error) {
     // console.log(error);
     return { success: false, error: true };
+  }
+};
+
+// Assignment Actions
+export const createAssignment = async (
+  currentState: CurrentState,
+  data: AssignmentSchema,
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  try {
+    // 1. If teacher, verify they own the lesson
+    if (role === "teacher") {
+      const teacherLesson = await prisma.lesson.findFirst({
+        where: {
+          teacherId: userId!,
+          id: data.lessonId,
+        },
+      });
+
+      if (!teacherLesson) {
+        return {
+          success: false,
+          error: true,
+          message: "Lesson not found or unauthorized",
+        };
+      }
+    }
+
+    // 2. Create the exam (Runs for BOTH admin and teacher)
+    await prisma.assignment.create({
+      data: {
+        title: data.title,
+        startDate: new Date(data.startDate),
+        dueDate: new Date(data.dueDate),
+        lessonId: data.lessonId,
+      },
+    });
+
+    // revalidatePath("/list/exams");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Create Exam Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+export const updateAssignment = async (
+  currentState: CurrentState,
+  data: AssignmentSchema,
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  // 1. Validate ID exists
+  if (!data.id) {
+    return { success: false, error: true, message: "Exam ID is missing" };
+  }
+
+  // 2. Validate input schema
+  const validatedFields = assignmentSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { id, title, startDate, dueDate, lessonId } = validatedFields.data;
+
+    // 3. If teacher, verify they own the lesson
+    if (role === "teacher") {
+      const teacherLesson = await prisma.lesson.findFirst({
+        where: {
+          teacherId: userId!,
+          id: lessonId,
+        },
+      });
+
+      if (!teacherLesson) {
+        return {
+          success: false,
+          error: true,
+          message: "Lesson not found or unauthorized",
+        };
+      }
+    }
+
+    // 4. Update the exam in DB (Executes for BOTH admin and teacher)
+    await prisma.assignment.update({
+      where: { id },
+      data: {
+        title,
+        startDate: new Date(startDate),
+        dueDate: new Date(dueDate),
+        lessonId,
+      },
+    });
+
+    // 5. Revalidate cache so UI instantly updates
+    // revalidatePath("/list/exams");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Update Exam Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+export const deleteAssignment = async (
+  currentState: CurrentState,
+  data: FormData,
+) => {
+  const id = data.get("id") as string;
+  // condition for teacher should only delete exams for their own subjects and classes, admin can add exams for all subjects and classes
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  try {
+    await prisma.assignment.delete({
+      where: {
+        id: parseInt(id),
+        ...(role === "teacher" ? { lesson: { teacherId: userId! } } : {}),
+      },
+    });
+
+    // revalidatePath("/list/subjects");
+    return { success: true, error: false };
+  } catch (error) {
+    // console.log(error);
+    return { success: false, error: true };
+  }
+};
+
+// Lesson Actions
+// export const createLesson = async (
+//   currentState: CurrentState,
+//   data: LessonSchema,
+// ) => {
+//   // condition for teacher should only add exams for their own subjects and classes, admin can add exams for all subjects and classes
+//   const { userId, sessionClaims } = await auth();
+//   const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+//   try {
+//     const teacherId = (data as any).teacherId ?? (data as any).teacheId;
+//     const lessonPayload: any = {
+//       classId: data.classId,
+//       teacherId,
+//       day: (data as any).day ?? "MONDAY",
+//       startTime: (data as any).startTime ?? new Date(),
+//       endTime: (data as any).endTime ?? new Date(Date.now() + 60 * 60 * 1000),
+//       subjectId: (data as any).subjectId ?? 1,
+//     };
+
+//     if (role === "teacher") {
+//       const teacherLesson = await prisma.lesson.findFirst({
+//         where: {
+//           teacherId: userId!,
+//           id: data.classId,
+//         },
+//       });
+
+//       if (!teacherLesson) {
+//         return { success: false, error: true, message: "Lesson not found" };
+//       }
+
+//       await prisma.lesson.create({
+//         data: lessonPayload,
+//       });
+//     }
+
+//     // revalidatePath("/list/subjects");
+//     return { success: true, error: false };
+//   } catch (error) {
+//     // console.log(error);
+//     return { success: false, error: true };
+//   }
+// };
+export const createLesson = async (
+  currentState: CurrentState,
+  data: LessonSchema,
+) => {
+  // const { userId, sessionClaims } = await auth();
+  // const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  const validatedFields = lessonSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { name, subjectId, classId, teacherId, startTime, endTime } =
+      validatedFields.data;
+
+    // Optional: Restrict teachers from creating lessons under another teacher's ID
+    // if (role === "teacher" && teacherId !== userId) {
+    //   return { success: false, error: true, message: "Unauthorized action" };
+    // }
+
+    // Derive day of the week from the start time
+    const dayOfWeek = new Date(startTime)
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toUpperCase();
+
+    await prisma.lesson.create({
+      data: {
+        name,
+        day: dayOfWeek as any,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        subjectId,
+        classId,
+        teacherId,
+      },
+    });
+
+    // revalidatePath("/list/lessons");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Create Lesson Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// export const updateLesson = async (
+//   currentState: CurrentState,
+//   data: LessonSchema,
+// ) => {
+//   // condition for teacher should only add exams for their own subjects and classes, admin can add exams for all subjects and classes
+//   const { userId, sessionClaims } = await auth();
+//   const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+//   try {
+//     if (!data.id) {
+//       return { success: false, error: true, message: "Lesson id is required" };
+//     }
+
+//     const teacherId = (data as any).teacherId ?? (data as any).teacheId;
+//     const lessonPayload: any = {
+//       classId: data.classId,
+//       teacherId,
+//       day: (data as any).day ?? "MONDAY",
+//       startTime: (data as any).startTime ?? new Date(),
+//       endTime: (data as any).endTime ?? new Date(Date.now() + 60 * 60 * 1000),
+//       subjectId: (data as any).subjectId ?? 1,
+//     };
+
+//     if (role === "teacher") {
+//       const teacherLesson = await prisma.lesson.findFirst({
+//         where: {
+//           teacherId: userId!,
+//           id: data.id,
+//         },
+//       });
+
+//       if (!teacherLesson) {
+//         return { success: false, error: true, message: "Lesson not found" };
+//       }
+//     }
+
+//     await prisma.lesson.update({
+//       where: { id: data.id },
+//       data: lessonPayload,
+//     });
+
+//     // revalidatePath("/list/subjects");
+//     return { success: true, error: false };
+//   } catch (error) {
+//     // console.log(error);
+//     return { success: false, error: true };
+//   }
+// };
+
+export const updateLesson = async (
+  currentState: CurrentState,
+  data: LessonSchema,
+) => {
+  if (!data.id) {
+    return { success: false, error: true, message: "Lesson ID is required" };
+  }
+
+  const validatedFields = lessonSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { id, name, subjectId, classId, teacherId, startTime, endTime } =
+      validatedFields.data;
+
+    const dayOfWeek = new Date(startTime)
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toUpperCase();
+
+    await prisma.lesson.update({
+      where: { id },
+      data: {
+        name,
+        day: dayOfWeek as any,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        subjectId,
+        classId,
+        teacherId,
+      },
+    });
+
+    // revalidatePath("/list/lessons");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Update Lesson Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+export const deleteLesson = async (
+  currentState: CurrentState,
+  data: FormData,
+) => {
+  const id = data.get("id") as string;
+  // condition for teacher should only delete exams for their own subjects and classes, admin can add exams for all subjects and classes
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  try {
+    await prisma.lesson.delete({
+      where: {
+        id: parseInt(id),
+        ...(role === "teacher" ? { lesson: { teacherId: userId! } } : {}),
+      },
+    });
+
+    // revalidatePath("/list/subjects");
+    return { success: true, error: false };
+  } catch (error) {
+    // console.log(error);
+    return { success: false, error: true };
+  }
+};
+
+// CREATE RESULT
+export const createResult = async (
+  currentState: CurrentState,
+  data: ResultSchema,
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  const validatedFields = resultSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { score, studentId, examId, assignmentId } = validatedFields.data;
+
+    // Optional authorization checks for teachers
+    if (role === "teacher") {
+      const teacherLesson = await prisma.lesson.findFirst({
+        where: {
+          teacherId: userId!,
+          id: data.assignmentId || data.examId,
+        },
+      });
+
+      if (!teacherLesson) {
+        return {
+          success: false,
+          error: true,
+          message: "Lesson not found or unauthorized",
+        };
+      }
+    }
+    await prisma.result.create({
+      data: {
+        score,
+        studentId,
+        examId: examId || null,
+        assignmentId: assignmentId || null,
+      },
+    });
+
+    // revalidatePath("/list/results");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Create Result Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// UPDATE RESULT
+export const updateResult = async (
+  currentState: CurrentState,
+  data: ResultSchema,
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  if (!data.id) {
+    return { success: false, error: true, message: "Result ID is missing" };
+  }
+
+  const validatedFields = resultSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { id, score, studentId, examId, assignmentId } = validatedFields.data;
+
+    await prisma.result.update({
+      where: { id },
+      data: {
+        score,
+        studentId,
+        examId: examId || null,
+        assignmentId: assignmentId || null,
+      },
+    });
+
+    // revalidatePath("/list/results");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Update Result Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// DELETE RESULT
+export const deleteResult = async (
+  currentState: CurrentState,
+  data: FormData,
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.result.delete({
+      where: { id: parseInt(id) },
+    });
+
+    revalidatePath("/list/results");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Delete Result Error:", error);
+    return { success: false, error: true, message: error.message };
   }
 };
 
@@ -1313,5 +1867,190 @@ export const deleteParent = async (
   } catch (error) {
     //console.log(error);
     return { success: false, error: true };
+  }
+};
+
+
+// CREATE EVENT
+export const createEvent = async (
+  currentState: CurrentState,
+  data: EventSchema
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  const validatedFields = eventSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { title, description, startTime, endTime, classId } = validatedFields.data;
+
+    await prisma.event.create({
+      data: {
+        title,
+        description,
+        startTime,
+        endTime,
+        classId: classId || null,
+      },
+    });
+
+    // revalidatePath("/list/events");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Create Event Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// UPDATE EVENT
+export const updateEvent = async (
+  currentState: CurrentState,
+  data: EventSchema
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  if (!data.id) {
+    return { success: false, error: true, message: "Event ID is missing" };
+  }
+
+  const validatedFields = eventSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { id, title, description, startTime, endTime, classId } = validatedFields.data;
+
+    await prisma.event.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        startTime,
+        endTime,
+        classId: classId || null,
+      },
+    });
+
+    // revalidatePath("/list/events");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Update Event Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// DELETE EVENT
+export const deleteEvent = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.event.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // revalidatePath("/list/events");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Delete Event Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// CREATE ANNOUNCEMENT
+export const createAnnouncement = async (
+  currentState: CurrentState,
+  data: AnnouncementSchema
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  const validatedFields = announcementSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { title, description, date, classId } = validatedFields.data;
+
+    await prisma.announcement.create({
+      data: {
+        title,
+        description,
+        date,
+        classId: classId || null,
+      },
+    });
+
+    // revalidatePath("/list/announcements");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Create Announcement Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// UPDATE ANNOUNCEMENT
+export const updateAnnouncement = async (
+  currentState: CurrentState,
+  data: AnnouncementSchema
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  if (!data.id) {
+    return { success: false, error: true, message: "Announcement ID is missing" };
+  }
+
+  const validatedFields = announcementSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { id, title, description, date, classId } = validatedFields.data;
+
+    await prisma.announcement.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        date,
+        classId: classId || null,
+      },
+    });
+
+    // revalidatePath("/list/announcements");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Update Announcement Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// DELETE ANNOUNCEMENT
+export const deleteAnnouncement = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.announcement.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // revalidatePath("/list/announcements");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Delete Announcement Error:", error);
+    return { success: false, error: true, message: error.message };
   }
 };
