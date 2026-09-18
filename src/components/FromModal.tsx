@@ -90,6 +90,9 @@ const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
 const MessageForm = dynamic(() => import("./forms/MessageForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const ProfileForm = dynamic(() => import("./forms/ProfileForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (
@@ -203,6 +206,9 @@ const forms: {
       relatedData={relatedData}
     />
   ),
+  profile: (setOpen, type, data, relatedData) => (
+    <ProfileForm setOpen={setOpen} data={data} relatedData={relatedData} />
+  ),
 };
 
 const FormModal = ({
@@ -223,10 +229,13 @@ const FormModal = ({
   const [open, setOpen] = useState(false);
 
   const Form = () => {
-    const [state, formAction] = useActionState(deleteActionMap[table], {
-      success: false,
-      error: false,
-    });
+    const [state, formAction] = useActionState(
+      deleteActionMap[table as keyof typeof deleteActionMap],
+      {
+        success: false,
+        error: false,
+      },
+    );
 
     const router = useRouter();
     useEffect(() => {
@@ -253,26 +262,26 @@ const FormModal = ({
     //   "Form not found!"
     // );
     return type === "delete" && id ? (
-    <form action={formAction} className="p-4 flex flex-col gap-4">
-      <input type="text" name="id" value={String(id)} hidden readOnly />
-      <span className="text-center font-medium">
-        All data will be lost. Are you sure you want to delete this {table}?
-      </span>
-      <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
-        Delete
-      </button>
-    </form>
-  ) : type === "create" || type === "update" ? (
-    forms[table] ? (
-      forms[table](setOpen, type, data, relatedData)
+      <form action={formAction} className="p-4 flex flex-col gap-4">
+        <input type="text" name="id" value={String(id)} hidden readOnly />
+        <span className="text-center font-medium">
+          All data will be lost. Are you sure you want to delete this {table}?
+        </span>
+        <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
+          Delete
+        </button>
+      </form>
+    ) : type === "create" || type === "update" ? (
+      forms[table] ? (
+        forms[table](setOpen, type, data, relatedData)
+      ) : (
+        <span className="text-red-500 font-semibold p-4">
+          Form not found for table: "{table}"
+        </span>
+      )
     ) : (
-      <span className="text-red-500 font-semibold p-4">
-        Form not found for table: "{table}"
-      </span>
-    )
-  ) : (
-    "Form not found!"
-  );
+      "Form not found!"
+    );
   };
 
   return (

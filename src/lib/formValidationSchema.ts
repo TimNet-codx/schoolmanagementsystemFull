@@ -289,3 +289,14 @@ export const messageSchema = z.object({
 });
 
 export type MessageSchema = z.infer<typeof messageSchema>;
+
+export const profileSchema = z.object({
+  id: z.coerce.number().optional(),
+  userId: z.string().min(1, { message: "User ID is required" }),
+  bio: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  avatarUrl: z.string().optional(),
+});
+
+export type ProfileSchema = z.infer<typeof profileSchema>;

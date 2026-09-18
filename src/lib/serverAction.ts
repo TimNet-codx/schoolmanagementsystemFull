@@ -18,6 +18,8 @@ import {
   messageSchema,
   MessageSchema,
   ParentSchema,
+  profileSchema,
+  ProfileSchema,
   resultSchema,
   ResultSchema,
   StudentSchema,
@@ -2238,6 +2240,50 @@ export const deleteMessage = async (
     return { success: true, error: false };
   } catch (error: any) {
     console.error("Delete Message Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// UPDATE OR CREATE PROFILE (UPSERT)
+export const updateProfile = async (
+  currentState: CurrentState,
+  data: ProfileSchema
+) => {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { success: false, error: true, message: "Unauthorized" };
+  }
+
+  const validatedFields = profileSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { bio, phone, address, avatarUrl } = validatedFields.data;
+
+    await prisma.profile.upsert({
+      where: { userId },
+      update: {
+        bio,
+        phone,
+        address,
+        avatarUrl,
+      },
+      create: {
+        userId,
+        bio,
+        phone,
+        address,
+        avatarUrl,
+      },
+    });
+
+    revalidatePath("/profile");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Update Profile Error:", error);
     return { success: false, error: true, message: error.message };
   }
 };

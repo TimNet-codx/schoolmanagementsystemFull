@@ -195,6 +195,16 @@ model Message {
   receiverId String
 }
 
+model Profile {
+  id        Int     @id @default(autoincrement())
+  bio       String?
+  phone     String?
+  address   String?
+  avatarUrl String?
+
+  userId    String  @unique
+}
+
 enum UserSex {
   MALE
   FEMALE
