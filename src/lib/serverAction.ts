@@ -15,6 +15,8 @@ import {
   ExamSchema,
   lessonSchema,
   LessonSchema,
+  messageSchema,
+  MessageSchema,
   ParentSchema,
   resultSchema,
   ResultSchema,
@@ -2149,6 +2151,93 @@ export const deleteAttendance = async (
     return { success: true, error: false };
   } catch (error: any) {
     console.error("Delete Attendance Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// CREATE MESSAGE
+export const createMessage = async (
+  currentState: CurrentState,
+  data: MessageSchema
+) => {
+  const { userId } = await auth();
+
+  const validatedFields = messageSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { subject, content, senderId, receiverId } = validatedFields.data;
+
+    await prisma.message.create({
+      data: {
+        subject,
+        content,
+        senderId: senderId || userId || "",
+        receiverId,
+      },
+    });
+
+    // revalidatePath("/list/messages");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Create Message Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// UPDATE MESSAGE
+export const updateMessage = async (
+  currentState: CurrentState,
+  data: MessageSchema
+) => {
+  if (!data.id) {
+    return { success: false, error: true, message: "Message ID is missing" };
+  }
+
+  const validatedFields = messageSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { id, subject, content, senderId, receiverId } = validatedFields.data;
+
+    await prisma.message.update({
+      where: { id },
+      data: {
+        subject,
+        content,
+        senderId,
+        receiverId,
+      },
+    });
+
+    // revalidatePath("/list/messages");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Update Message Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// DELETE MESSAGE
+export const deleteMessage = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.message.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // revalidatePath("/list/messages");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Delete Message Error:", error);
     return { success: false, error: true, message: error.message };
   }
 };

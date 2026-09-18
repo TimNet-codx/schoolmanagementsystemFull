@@ -16,7 +16,8 @@ export type FormContainerProps = {
     | "result"
     | "attendance"
     | "event"
-    | "announcement";
+    | "announcement"
+    | "message";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | String;
@@ -184,6 +185,36 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
           students: attendanceStudents,
           lessons: attendanceLessons,
         };
+        break;
+      case "message": 
+        const teachers = await prisma.teacher.findMany({
+          select: { id: true, name: true, surname: true },
+        });
+        const students = await prisma.student.findMany({
+          select: { id: true, name: true, surname: true },
+        });
+        const parents = await prisma.parent.findMany({
+          select: { id: true, name: true, surname: true },
+        });
+
+        const formattedUsers = [
+          ...teachers.map((teacher) => ({
+            id: teacher.id,
+            name: `${teacher.name} ${teacher.surname}`,
+            role: "Teacher",
+          })),
+          ...students.map((student) => ({
+            id: student.id,
+            name: `${student.name} ${student.surname}`,
+            role: "Student",
+          })),
+          ...parents.map((parent) => ({
+            id: parent.id,
+            name: `${parent.name} ${parent.surname}`,
+            role: "Parent",
+          })),
+        ];
+        relatedData = { users: formattedUsers, currentUserId: userId };
         break;
       default:
         break;

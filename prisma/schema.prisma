@@ -185,6 +185,16 @@ model Announcement {
   class   Class? @relation(fields: [classId], references: [id])
 }
 
+model Message {
+  id        Int      @id @default(autoincrement())
+  subject   String
+  content   String
+  createdAt DateTime @default(now())
+
+  senderId   String
+  receiverId String
+}
+
 enum UserSex {
   MALE
   FEMALE
