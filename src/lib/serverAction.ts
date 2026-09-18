@@ -6,6 +6,8 @@ import {
   AnnouncementSchema,
   assignmentSchema,
   AssignmentSchema,
+  attendanceSchema,
+  AttendanceSchema,
   ClassSchema,
   eventSchema,
   EventSchema,
@@ -1870,11 +1872,10 @@ export const deleteParent = async (
   }
 };
 
-
 // CREATE EVENT
 export const createEvent = async (
   currentState: CurrentState,
-  data: EventSchema
+  data: EventSchema,
 ) => {
   const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
@@ -1885,7 +1886,8 @@ export const createEvent = async (
   }
 
   try {
-    const { title, description, startTime, endTime, classId } = validatedFields.data;
+    const { title, description, startTime, endTime, classId } =
+      validatedFields.data;
 
     await prisma.event.create({
       data: {
@@ -1908,7 +1910,7 @@ export const createEvent = async (
 // UPDATE EVENT
 export const updateEvent = async (
   currentState: CurrentState,
-  data: EventSchema
+  data: EventSchema,
 ) => {
   const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
@@ -1923,7 +1925,8 @@ export const updateEvent = async (
   }
 
   try {
-    const { id, title, description, startTime, endTime, classId } = validatedFields.data;
+    const { id, title, description, startTime, endTime, classId } =
+      validatedFields.data;
 
     await prisma.event.update({
       where: { id },
@@ -1947,7 +1950,7 @@ export const updateEvent = async (
 // DELETE EVENT
 export const deleteEvent = async (
   currentState: CurrentState,
-  data: FormData
+  data: FormData,
 ) => {
   const id = data.get("id") as string;
 
@@ -1967,7 +1970,7 @@ export const deleteEvent = async (
 // CREATE ANNOUNCEMENT
 export const createAnnouncement = async (
   currentState: CurrentState,
-  data: AnnouncementSchema
+  data: AnnouncementSchema,
 ) => {
   const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
@@ -2000,13 +2003,17 @@ export const createAnnouncement = async (
 // UPDATE ANNOUNCEMENT
 export const updateAnnouncement = async (
   currentState: CurrentState,
-  data: AnnouncementSchema
+  data: AnnouncementSchema,
 ) => {
   const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
 
   if (!data.id) {
-    return { success: false, error: true, message: "Announcement ID is missing" };
+    return {
+      success: false,
+      error: true,
+      message: "Announcement ID is missing",
+    };
   }
 
   const validatedFields = announcementSchema.safeParse(data);
@@ -2038,7 +2045,7 @@ export const updateAnnouncement = async (
 // DELETE ANNOUNCEMENT
 export const deleteAnnouncement = async (
   currentState: CurrentState,
-  data: FormData
+  data: FormData,
 ) => {
   const id = data.get("id") as string;
 
@@ -2051,6 +2058,97 @@ export const deleteAnnouncement = async (
     return { success: true, error: false };
   } catch (error: any) {
     console.error("Delete Announcement Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// CREATE ATTENDANCE
+export const createAttendance = async (
+  currentState: CurrentState,
+  data: AttendanceSchema,
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  const validatedFields = attendanceSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { date, present, studentId, lessonId } = validatedFields.data;
+
+    await prisma.attendance.create({
+      data: {
+        date,
+        present,
+        studentId,
+        lessonId,
+      },
+    });
+
+    // revalidatePath("/list/attendance");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Create Attendance Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// UPDATE ATTENDANCE
+export const updateAttendance = async (
+  currentState: CurrentState,
+  data: AttendanceSchema,
+) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  if (!data.id) {
+    return { success: false, error: true, message: "Attendance ID is missing" };
+  }
+
+  const validatedFields = attendanceSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form payload" };
+  }
+
+  try {
+    const { id, date, present, studentId, lessonId } = validatedFields.data;
+
+    await prisma.attendance.update({
+      where: { id },
+      data: {
+        date,
+        present,
+        studentId,
+        lessonId,
+      },
+    });
+
+    // revalidatePath("/list/attendance");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Update Attendance Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};
+
+// DELETE ATTENDANCE
+export const deleteAttendance = async (
+  currentState: CurrentState,
+  data: FormData,
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.attendance.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // revalidatePath("/list/attendance");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Delete Attendance Error:", error);
     return { success: false, error: true, message: error.message };
   }
 };

@@ -3,7 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import InputField from "../InputField";
-import { announcementSchema, AnnouncementSchema } from "@/lib/formValidationSchema";
+import {
+  announcementSchema,
+  AnnouncementSchema,
+} from "@/lib/formValidationSchema";
 import { createAnnouncement, updateAnnouncement } from "@/lib/serverAction";
 import {
   Dispatch,
@@ -43,13 +46,14 @@ const AnnouncementForm = ({
       title: data?.title || "",
       description: data?.description || "",
       date: formatDateForInput(data?.date) as any,
-      classId: data?.classId != null ? Number(data.classId) : undefined,
+      //classId: data?.classId != null ? Number(data.classId) : undefined,
+      classId: data?.classId ? Number(data.classId) : undefined,
     },
   });
 
   const [state, formAction] = useActionState(
     type === "create" ? createAnnouncement : updateAnnouncement,
-    { success: false, error: false }
+    { success: false, error: false },
   );
 
   const onSubmit = handleSubmit((formData) => {
@@ -62,7 +66,9 @@ const AnnouncementForm = ({
 
   useEffect(() => {
     if (state.success) {
-      toast(`Announcement has been ${type === "create" ? "created" : "updated"}!`);
+      toast(
+        `Announcement has been ${type === "create" ? "created" : "updated"}!`,
+      );
       setOpen(false);
       router.refresh();
     }
@@ -73,7 +79,9 @@ const AnnouncementForm = ({
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
-        {type === "create" ? "Create new Announcement" : "Update the announcement"}
+        {type === "create"
+          ? "Create new Announcement"
+          : "Update the announcement"}
       </h1>
 
       <div className="flex justify-between flex-wrap gap-4">
@@ -89,7 +97,7 @@ const AnnouncementForm = ({
         )}
 
         <InputField
-          label="Title"
+          label=" Announcement Title"
           name="title"
           defaultValue={data?.title}
           register={register}

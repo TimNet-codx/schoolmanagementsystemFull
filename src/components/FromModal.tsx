@@ -3,6 +3,7 @@
 import {
   deleteAnnouncement,
   deleteAssignment,
+  deleteAttendance,
   deleteClass,
   deleteEvent,
   deleteExam,
@@ -42,7 +43,7 @@ const deleteActionMap = {
   exam: deleteExam,
   assignment: deleteAssignment,
   result: deleteResult,
-  attendance: deleteSubject,
+  attendance: deleteAttendance,
   event: deleteEvent,
   announcement: deleteAnnouncement,
 };
@@ -80,7 +81,10 @@ const ResultForm = dynamic(() => import("./forms/ResultForm"), {
 const EventForm = dynamic(() => import("./forms/EventForm"), {
   loading: () => <h1>Loading...</h1>,
 });
-
+const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
+  loading: () => <h1>Loading...</h1>,
+  ssr: false,
+});
 
 const forms: {
   [key: string]: (
@@ -90,7 +94,7 @@ const forms: {
     relatedData?: any,
   ) => JSX.Element;
 } = {
-  announncement: (setOpen, type, data, relatedData) => (
+  announcement: (setOpen, type, data, relatedData) => (
     <AnnouncementForm
       setOpen={setOpen}
       type={type}
@@ -172,6 +176,14 @@ const forms: {
   ),
   event: (setOpen, type, data, relatedData) => (
     <EventForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
+  attendance: (setOpen, type, data, relatedData) => (
+    <AttendanceForm
       setOpen={setOpen}
       type={type}
       data={data}
