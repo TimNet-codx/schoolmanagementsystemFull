@@ -293,10 +293,14 @@ export type MessageSchema = z.infer<typeof messageSchema>;
 export const profileSchema = z.object({
   id: z.coerce.number().optional(),
   userId: z.string().min(1, { message: "User ID is required" }),
-  bio: z.string().optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  avatarUrl: z.string().optional(),
+  username: z.string().min(1, { message: "Username is required" }),
+  name: z.string().min(1, { message: "First name is required" }),
+  surname: z.string().min(1, { message: "Last name is required" }),
+  email: z.string().optional().or(z.literal("")),
+  bio: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  avatarUrl: z.string().optional().or(z.literal("")),
 });
 
 export type ProfileSchema = z.infer<typeof profileSchema>;

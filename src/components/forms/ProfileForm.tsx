@@ -5,15 +5,18 @@ import { useForm } from "react-hook-form";
 import InputField from "../InputField";
 import { profileSchema, ProfileSchema } from "@/lib/formValidationSchema";
 import { updateProfile } from "@/lib/serverAction";
+import { CldUploadWidget } from "next-cloudinary";
 import {
   Dispatch,
   SetStateAction,
   startTransition,
   useActionState,
   useEffect,
+  useState
 } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const ProfileForm = ({
   data,
@@ -34,13 +37,17 @@ const ProfileForm = ({
     defaultValues: {
       id: data?.id,
       userId: data?.userId || relatedData?.currentUserId || "",
+      username: data?.username || "",
+      name: data?.name || "",
+      surname: data?.surname || "",
+      email: data?.email || "",
       bio: data?.bio || "",
       phone: data?.phone || "",
       address: data?.address || "",
       avatarUrl: data?.avatarUrl || "",
     },
   });
-
+const [img, setImg] = useState<any>();
   const [state, formAction] = useActionState(updateProfile, {
     success: false,
     error: false,
@@ -88,7 +95,40 @@ const ProfileForm = ({
         />
 
         <InputField
-          label="Phone Number"
+          label="Username"
+          name="username"
+          defaultValue={data?.username}
+          register={register}
+          error={errors?.username}
+        />
+
+        <InputField
+          label="First Name"
+          name="name"
+          defaultValue={data?.name}
+          register={register}
+          error={errors?.name}
+        />
+
+        <InputField
+          label="Last Name"
+          name="surname"
+          defaultValue={data?.surname}
+          register={register}
+          error={errors?.surname}
+        />
+
+        <InputField
+          label="Email"
+          name="email"
+          type="email"
+          defaultValue={data?.email}
+          register={register}
+          error={errors?.email}
+        />
+
+        <InputField
+          label="Phone"
           name="phone"
           defaultValue={data?.phone}
           register={register}
@@ -103,13 +143,36 @@ const ProfileForm = ({
           error={errors?.address}
         />
 
-        <InputField
+        {/* <InputField
           label="Avatar URL"
           name="avatarUrl"
           defaultValue={data?.avatarUrl}
           register={register}
           error={errors?.avatarUrl}
-        />
+        /> */}
+        <CldUploadWidget
+          uploadPreset="schoolImg"
+          onSuccess={(result, { widget }) => {
+            setImg(result.info);
+            widget.close();
+          }}
+        >
+          {({ open }) => {
+            return (
+              <div
+                className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer w-max"
+                onClick={() => open()}
+              >
+                <Image src="/upload.png" alt="" width={28} height={28} />
+                <span>
+                  {img?.secure_url || data?.img
+                    ? "Change photo"
+                    : "Upload a photo"}
+                </span>
+              </div>
+            );
+          }}
+        </CldUploadWidget>
 
         <div className="flex flex-col gap-2 w-full">
           <label className="text-xs text-gray-500">Bio</label>
@@ -120,7 +183,9 @@ const ProfileForm = ({
             defaultValue={data?.bio}
           />
           {errors.bio?.message && (
-            <p className="text-xs text-red-400">{errors.bio.message.toString()}</p>
+            <p className="text-xs text-red-400">
+              {errors.bio.message.toString()}
+            </p>
           )}
         </div>
       </div>

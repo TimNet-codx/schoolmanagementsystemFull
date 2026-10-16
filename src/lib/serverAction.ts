@@ -932,6 +932,7 @@ export const createTeacher = async (
       password: data.password,
       firstName: data.name,
       lastName: data.surname,
+      publicMetadata: { role: "teacher" },
     });
     clerkUserId = user.id;
 
@@ -1130,6 +1131,7 @@ export const updateTeacher = async (
       // ...(data.password !== "" && { password: data.password }),
       firstName: data.name,
       lastName: data.surname,
+      publicMetadata: { role: "teacher" },
     };
 
     // Only pass password if the user actually typed a new one
@@ -1241,6 +1243,7 @@ export const createStudent = async (
       password: data.password,
       firstName: data.name,
       lastName: data.surname,
+      publicMetadata: { role: "student" },
     });
     clerkUserId = user.id;
 
@@ -1290,7 +1293,7 @@ export const createStudent = async (
         return `A Student with this ${uniqueFieldLabels[field]} already exists.`;
       }
 
-      return "Something went wrong!";
+      return "Something went wrong!!!!";
     };
 
     const message =
@@ -1298,7 +1301,7 @@ export const createStudent = async (
         ? getUniqueConstraintMessage(error)
         : error?.errors?.[0]?.longMessage ||
           error?.errors?.[0]?.message ||
-          "Something went wrong!";
+          "Something went wrong!!!";
 
     return { success: false, error: true, message };
   }
@@ -1534,6 +1537,7 @@ export const updateStudent = async (
       username: data.username,
       firstName: data.name,
       lastName: data.surname,
+      publicMetadata: { role: "student" },
     };
 
     // Only pass password if the user actually typed a new one
@@ -1710,6 +1714,7 @@ export const createParent = async (
       firstName: data.name,
       lastName: data.surname,
       ...(data.email ? { emailAddress: [data.email] } : {}),
+      publicMetadata: { role: "parent" },
     });
     clerkUserId = user.id;
 
@@ -1791,6 +1796,7 @@ export const updateParent = async (
       username: data.username,
       firstName: data.name,
       lastName: data.surname,
+      publicMetadata: { role: "parent" },
     };
 
     // Update password only if provided
@@ -2160,7 +2166,7 @@ export const deleteAttendance = async (
 // CREATE MESSAGE
 export const createMessage = async (
   currentState: CurrentState,
-  data: MessageSchema
+  data: MessageSchema,
 ) => {
   const { userId } = await auth();
 
@@ -2192,7 +2198,7 @@ export const createMessage = async (
 // UPDATE MESSAGE
 export const updateMessage = async (
   currentState: CurrentState,
-  data: MessageSchema
+  data: MessageSchema,
 ) => {
   if (!data.id) {
     return { success: false, error: true, message: "Message ID is missing" };
@@ -2227,7 +2233,7 @@ export const updateMessage = async (
 // DELETE MESSAGE
 export const deleteMessage = async (
   currentState: CurrentState,
-  data: FormData
+  data: FormData,
 ) => {
   const id = data.get("id") as string;
 
@@ -2245,45 +2251,126 @@ export const deleteMessage = async (
 };
 
 // UPDATE OR CREATE PROFILE (UPSERT)
+// export const updateProfile = async (
+//   currentState: CurrentState,
+//   data: ProfileSchema
+// ) => {
+//   const { userId } = await auth();
+
+//   if (!userId) {
+//     return { success: false, error: true, message: "Unauthorized" };
+//   }
+
+//   const validatedFields = profileSchema.safeParse(data);
+//   if (!validatedFields.success) {
+//     return { success: false, error: true, message: "Invalid form payload" };
+//   }
+
+//   try {
+//     const { bio, phone, address, avatarUrl } = validatedFields.data;
+
+//     await prisma.profile.upsert({
+//       where: { userId },
+//       update: {
+//         bio,
+//         phone,
+//         address,
+//         avatarUrl,
+//       },
+//       create: {
+//         userId,
+//         bio,
+//         phone,
+//         address,
+//         avatarUrl,
+//       },
+//     });
+
+//     // revalidatePath("/profile");
+//     return { success: true, error: false };
+//   } catch (error: any) {
+//     console.error("Update Profile Error:", error);
+//     return { success: false, error: true, message: error.message };
+//   }
+// };
+
+// export const updateProfile = async (
+//   currentState: CurrentState,
+//   data: ProfileSchema
+// ) => {
+//   const { userId } = await auth();
+
+//   if (!userId) {
+//     return { success: false, error: true, message: "Unauthorized" };
+//   }
+
+//   const validatedFields = profileSchema.safeParse(data);
+//   if (!validatedFields.success) {
+//     console.error("Validation Errors:", validatedFields.error.flatten());
+//     return { success: false, error: true, message: "Invalid form payload" };
+//   }
+
+//   try {
+//     const { username, name, surname, email, bio, phone, address, avatarUrl } =
+//       validatedFields.data;
+
+//     await prisma.profile.upsert({
+//       where: { userId },
+//       update: {
+//         username,
+//         name,
+//         surname,
+//         email: email || null,
+//         bio: bio || null,
+//         phone: phone || null,
+//         address: address || null,
+//         avatarUrl: avatarUrl || null,
+//       },
+//       create: {
+//         userId,
+//         username,
+//         name,
+//         surname,
+//         email: email || null,
+//         bio: bio || null,
+//         phone: phone || null,
+//         address: address || null,
+//         avatarUrl: avatarUrl || null,
+//       },
+//     });
+
+//     revalidatePath("/profile");
+//     return { success: true, error: false };
+//   } catch (error: any) {
+//     console.error("Update Profile Error:", error);
+//     return { success: false, error: true, message: error.message };
+//   }
+// };
+
 export const updateProfile = async (
   currentState: CurrentState,
-  data: ProfileSchema
+  data: ProfileSchema,
 ) => {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return { success: false, error: true, message: "Unauthorized" };
-  }
-
-  const validatedFields = profileSchema.safeParse(data);
-  if (!validatedFields.success) {
-    return { success: false, error: true, message: "Invalid form payload" };
-  }
-
   try {
-    const { bio, phone, address, avatarUrl } = validatedFields.data;
-
     await prisma.profile.upsert({
-      where: { userId },
+      where: { userId: data.userId },
       update: {
-        bio,
-        phone,
-        address,
-        avatarUrl,
+        phone: data.phone || null,
+        address: data.address || null,
+        bio: data.bio || null,
+        ...(data.avatarUrl ? { avatarUrl: data.avatarUrl } : {}),
       },
       create: {
-        userId,
-        bio,
-        phone,
-        address,
-        avatarUrl,
+        userId: data.userId,
+        phone: data.phone || null,
+        address: data.address || null,
+        bio: data.bio || null,
+        avatarUrl: data.avatarUrl || null,
       },
     });
-
-    revalidatePath("/profile");
     return { success: true, error: false };
   } catch (error: any) {
-    console.error("Update Profile Error:", error);
-    return { success: false, error: true, message: error.message };
+    console.error("updateProfile Error:", error);
+    return { success: false, error: true, message: error?.message };
   }
 };

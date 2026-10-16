@@ -23,7 +23,12 @@ const ParentPage = async ({
       <div className="w-full xl:w-2/3">
         <div className="h-full bg-white p-4 rounded-md">
           <h1 className="text-xl font-semibold">Schedule (Ayo Mark)</h1>
-          <BigCalenderContainer type="classId" id={classItem[0].id} />
+          {/* <BigCalenderContainer type="classId" id={classItem[0].id} /> */}
+          {classItem && classItem.length > 0 ? (
+            <BigCalenderContainer type="classId" id={classItem[0].id} />
+          ) : (
+            <p className="text-gray-500 mt-4">No schedule or class found.</p>
+          )}
         </div>
       </div>
       {/* RIGHT */}

@@ -203,6 +203,10 @@ model Profile {
   avatarUrl String?
 
   userId    String  @unique
+  email    String? @unique
+  username String? @unique
+  name     String  @default("")
+  surname  String  @default("")
 }
 
 enum UserSex {
