@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  AdminSchema,
   announcementSchema,
   AnnouncementSchema,
   assignmentSchema,
@@ -30,6 +31,7 @@ import prisma from "./prisma";
 import { success } from "zod";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { error } from "console";
+import { getAdminErrorMessage } from "./utils";
 
 type CurrentState = { success: boolean; error: boolean; message?: string };
 
@@ -2374,3 +2376,148 @@ export const updateProfile = async (
     return { success: false, error: true, message: error?.message };
   }
 };
+
+// Admin Actions
+export const createAdmin = async (
+  currentState: CurrentState,
+  data: AdminSchema,
+) => {
+  let clerkUserId: string | undefined;
+
+  if (!data.password || data.password.trim() === "") {
+    return { success: false, error: true, message: "Password is required!" };
+  }
+
+  try {
+    const clerk = await clerkClient();
+    const user = await clerk.users.createUser({
+      username: data.username,
+      password: data.password,
+      firstName: data.name,
+      lastName: data.surname,
+      publicMetadata: { role: "admin" },
+    });
+    clerkUserId = user.id;
+
+    await prisma.admin.create({
+      data: {
+        id: user.id,
+        username: data.username,
+        name: data.name,
+        surname: data.surname,
+        email: data.email || null,
+        phone: data.phone || null,
+        address: data.address,
+        bloodType: data.bloodType,
+        birthday: new Date(data.birthday),
+        sex: data.sex,
+        img: data.img || null,
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (error: any) {
+    // Roll back the Clerk user if the database insert failed
+    if (clerkUserId) {
+      try {
+        const clerk = await clerkClient();
+        await clerk.users.deleteUser(clerkUserId);
+      } catch (rollbackError) {
+        // ignore rollback failure
+      }
+    }
+    return { success: false, error: true, message: getAdminErrorMessage(error) };
+  }
+};
+
+export const updateAdmin = async (
+  currentState: CurrentState,
+  data: AdminSchema,
+) => {
+  if (!data.id) {
+    return { success: false, error: true, message: "Admin ID is required!" };
+  }
+
+  try {
+    const clerk = await clerkClient();
+
+    const clerkUpdateData: Record<string, any> = {
+      username: data.username,
+      firstName: data.name,
+      lastName: data.surname,
+      publicMetadata: { role: "admin" },
+    };
+
+    // Only change the password if a new one was typed
+    if (data.password && data.password.trim() !== "") {
+      clerkUpdateData.password = data.password;
+    }
+
+    await clerk.users.updateUser(data.id, clerkUpdateData);
+
+    await prisma.admin.update({
+      where: { id: data.id },
+      data: {
+        username: data.username,
+        name: data.name,
+        surname: data.surname,
+        email: data.email || null,
+        phone: data.phone || null,
+        address: data.address,
+        bloodType: data.bloodType,
+        birthday: new Date(data.birthday),
+        sex: data.sex,
+        // only change the photo when a new one was uploaded
+        ...(data.img ? { img: data.img } : {}),
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (error: any) {
+    return { success: false, error: true, message: getAdminErrorMessage(error) };
+  }
+};
+
+export const deleteAdmin = async (
+  currentState: CurrentState,
+  data: FormData,
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    const { userId } = await auth();
+
+    // Don't let an admin delete their own account
+    if (userId === id) {
+      return {
+        success: false,
+        error: true,
+        message: "You cannot delete your own account!",
+      };
+    }
+
+    // Don't remove the last remaining admin
+    const adminCount = await prisma.admin.count();
+    if (adminCount <= 1) {
+      return {
+        success: false,
+        error: true,
+        message: "You cannot delete the last admin!",
+      };
+    }
+
+    await (await clerkClient()).users.deleteUser(id);
+    await prisma.admin.delete({ where: { id } });
+
+    return { success: true, error: false };
+  } catch (error: any) {
+    return { success: false, error: true, message: getAdminErrorMessage(error) };
+  }
+};
+
+
+
+
+
+
+

@@ -304,3 +304,39 @@ export const profileSchema = z.object({
 });
 
 export type ProfileSchema = z.infer<typeof profileSchema>;
+
+
+export const adminSchema = z.object({
+  id: z.string().optional(),
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters long!" })
+    .max(20, { message: "Username must be at most 20 characters long!" }),
+  // "" is allowed so an update without a new password still validates
+  password: z
+    .union([
+      z.literal(""),
+      z
+        .string()
+        .min(8, { message: "Password must be at least 8 characters long!" })
+        .regex(/[a-z]/, { message: "Password must contain a lowercase letter!" })
+        .regex(/[A-Z]/, { message: "Password must contain an uppercase letter!" })
+        .regex(/[0-9]/, { message: "Password must contain a number!" }),
+    ])
+    .optional(),
+  name: z.string().min(1, { message: "First name is required!" }),
+  surname: z.string().min(1, { message: "Last name is required!" }),
+  email: z
+    .string()
+    .email({ message: "Invalid email address!" })
+    .optional()
+    .or(z.literal("")),
+  phone: z.string().optional(),
+  address: z.string().min(1, { message: "Address is required!" }),
+  bloodType: z.string().min(1, { message: "Blood type is required!" }),
+  birthday: z.coerce.date({ message: "Birthday is required!" }),
+  sex: z.enum(["MALE", "FEMALE"], { message: "Sex is required!" }),
+  img: z.string().optional(),
+});
+
+export type AdminSchema = z.infer<typeof adminSchema>;

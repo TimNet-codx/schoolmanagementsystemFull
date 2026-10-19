@@ -286,7 +286,7 @@ const Menu = async () => {
           ACADEMIC SESSION
         </p>
         <p className="text-xs font-semibold text-gray-900 mt-0.5">
-          Spring Term 2024–2025
+          Spring Term 2026–2027
         </p>
       </div>
 

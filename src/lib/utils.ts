@@ -11,6 +11,22 @@ export const getAuthUser = async () => {
   return { currentUserId: userId, role };
 };
 
+export const isAdminCaller = async () => {
+  const { userId, sessionClaims } = await auth();
+  return (sessionClaims?.metadata as any)?.role === "admin";
+};
+
+export const getAdminErrorMessage = (error: any) => {
+  if (error?.code === "P2002") {
+    return "An admin with this username already exists";
+  }
+  return (
+    error?.errors?.[0]?.lonfMessage ||
+    error?.error?.[0]?.message ||
+    " Something went wrong!"
+  );
+};
+
 const currentWorkWeek = () => {
   const today = new Date();
   const dayOfWeek = today.getDate();
@@ -67,10 +83,9 @@ export const adjustScheduleToCurrentweek = (
     );
 
     return {
-      title: lesson.title,  
+      title: lesson.title,
       start: adjustedStartDate,
-      end: adjustedEndDate
-
-    }
+      end: adjustedEndDate,
+    };
   });
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import {
   BarChart3,
   BookOpen,
@@ -10,13 +11,13 @@ import {
   FileText,
   GraduationCap,
   LayoutDashboard,
-  LogOut,
   Megaphone,
   MessageSquare,
   School,
   Settings,
   UserCircle,
   Users,
+  SectionIcon,
   Presentation,
   type LucideIcon,
 } from "lucide-react";
@@ -37,7 +38,7 @@ const menuItems: {
       {
         icon: LayoutDashboard,
         label: "Dashboard",
-        href: "", // Dynamic base path calculated per role
+        href: "",
         visible: ALL,
       },
       {
@@ -115,7 +116,18 @@ const menuItems: {
     items: [
       { icon: UserCircle, label: "Profile", href: "/profile", visible: ALL },
       { icon: Settings, label: "Settings", href: "/settings", visible: ALL },
-      { icon: LogOut, label: "Logout", href: "/logout", visible: ALL },
+      {
+        icon: SectionIcon,
+        label: "Admin",
+        href: "/admins",
+        visible: ["admin"],
+      },
+      {
+        icon: UserCircle,
+        label: "Logout",
+        href: "#",
+        visible: ALL,
+      },
     ],
   },
 ];
@@ -143,7 +155,30 @@ const MenuLinks = ({ role }: { role?: string }) => {
             </span>
 
             {items.map(({ icon: Icon, label, href }) => {
-              // Dynamically set the Dashboard link to the user's role path (e.g., /admin, /teacher, /student, /parent)
+              if (label === "Logout") {
+                return (
+                  <div
+                    key={label}
+                    className="flex items-center justify-center lg:justify-start gap-3 py-2 px-2 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+                  >
+                    <UserButton
+                      showName
+                      appearance={{
+                        elements: {
+                          rootBox:
+                            "w-full flex items-center justify-center lg:justify-start",
+                          userButtonTrigger:
+                            "w-full flex items-center justify-center lg:justify-start gap-2 focus:shadow-none",
+                          userButtonOuterIdentifier:
+                            "hidden lg:block text-xs font-medium text-gray-600 p-0",
+                          avatarBox: "w-5 h-5",
+                        },
+                      }}
+                    />
+                  </div>
+                );
+              }
+
               const targetHref = label === "Dashboard" ? `/${role}` : href;
               const active = isActive(targetHref);
 

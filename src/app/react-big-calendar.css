@@ -1,0 +1,103 @@
+/* Portal theme for react-big-calendar */
+
+.rbc-calendar {
+  font-size: 12px;
+  color: #374151;
+}
+
+/* Toolbar */
+.rbc-toolbar {
+  margin-bottom: 12px;
+  gap: 8px;
+}
+.rbc-toolbar .rbc-toolbar-label {
+  font-weight: 600;
+  color: #111827;
+  font-size: 13px;
+}
+.rbc-toolbar button {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #4b5563;
+  background: #fff;
+  font-size: 12px;
+  padding: 5px 12px;
+  box-shadow: none;
+}
+.rbc-toolbar button:hover,
+.rbc-toolbar button:focus {
+  background: #f9fafb;
+  color: #111827;
+}
+.rbc-toolbar button.rbc-active,
+.rbc-toolbar button.rbc-active:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+  box-shadow: none;
+}
+.rbc-btn-group > button:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+.rbc-btn-group > button:first-child:not(:last-child) {
+  border-radius: 8px 0 0 8px;
+}
+.rbc-btn-group > button:last-child:not(:first-child) {
+  border-radius: 0 8px 8px 0;
+}
+
+/* Grid */
+.rbc-time-view,
+.rbc-month-view {
+  border: 1px solid #eef0f4;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.rbc-time-header-content,
+.rbc-header,
+.rbc-time-content,
+.rbc-time-content > * + * > *,
+.rbc-day-bg + .rbc-day-bg,
+.rbc-timeslot-group,
+.rbc-time-header.rbc-overflowing {
+  border-color: #eef0f4;
+}
+.rbc-header {
+  padding: 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.rbc-header.rbc-today {
+  color: #1d4ed8;
+}
+.rbc-today {
+  background: #f5f8ff;
+}
+.rbc-time-slot {
+  color: #9ca3af;
+  font-size: 10px;
+}
+.rbc-current-time-indicator {
+  background-color: #1d4ed8;
+}
+
+/* Events */
+.rbc-event {
+  border-radius: 6px;
+  border: 1px solid transparent;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+.rbc-event:focus,
+.rbc-selected.rbc-event {
+  outline: 2px solid #93c5fd;
+}
+.rbc-event-label {
+  font-size: 10px;
+  opacity: 0.85;
+}
