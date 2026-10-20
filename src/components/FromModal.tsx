@@ -315,12 +315,14 @@
 "use client";
 
 import {
+  deleteAdmin,
   deleteAnnouncement,
   deleteAssignment,
   deleteAttendance,
   deleteClass,
   deleteEvent,
   deleteExam,
+  deleteGrade,
   deleteLesson,
   deleteMessage,
   deleteParent,
@@ -357,6 +359,8 @@ const deleteActionMap = {
   event: deleteEvent,
   announcement: deleteAnnouncement,
   message: deleteMessage,
+  admin: deleteAdmin,
+  grade: deleteGrade,
 };
 
 const Loading = () => (
@@ -379,6 +383,8 @@ const LessonForm = dynamic(() => import("./forms/LessonForm"), { loading: Loadin
 const ResultForm = dynamic(() => import("./forms/ResultForm"), { loading: Loading });
 const EventForm = dynamic(() => import("./forms/EventForm"), { loading: Loading });
 const AdminForm = dynamic(() => import("./forms/AdminForm"), { loading: Loading });
+const GradeForm = dynamic(() => import("./forms/GradeForm"), { loading: Loading });
+
 
 const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
   loading: Loading,
@@ -403,6 +409,8 @@ const formComponents: Record<string, ComponentType<any>> = {
   message: MessageForm,
   profile: ProfileForm,
   admin: AdminForm,
+  grade: GradeForm,
+
 };
 
 /**

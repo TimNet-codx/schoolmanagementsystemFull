@@ -305,7 +305,6 @@ export const profileSchema = z.object({
 
 export type ProfileSchema = z.infer<typeof profileSchema>;
 
-
 export const adminSchema = z.object({
   id: z.string().optional(),
   username: z
@@ -314,15 +313,16 @@ export const adminSchema = z.object({
     .max(20, { message: "Username must be at most 20 characters long!" }),
   // "" is allowed so an update without a new password still validates
   password: z
-    .union([
-      z.literal(""),
-      z
-        .string()
-        .min(8, { message: "Password must be at least 8 characters long!" })
-        .regex(/[a-z]/, { message: "Password must contain a lowercase letter!" })
-        .regex(/[A-Z]/, { message: "Password must contain an uppercase letter!" })
-        .regex(/[0-9]/, { message: "Password must contain a number!" }),
-    ])
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long!" })
+    .regex(/[a-z]/, {
+      message: "Password must contain at least one lowercase letter!",
+    })
+    .regex(/[A-Z]/, {
+      message: "Password must contain at least one uppercase letter!",
+    })
+    .regex(/[0-9]/, { message: "Password must contain at least one number!" })
+    .or(z.literal(""))
     .optional(),
   name: z.string().min(1, { message: "First name is required!" }),
   surname: z.string().min(1, { message: "Last name is required!" }),
@@ -340,3 +340,11 @@ export const adminSchema = z.object({
 });
 
 export type AdminSchema = z.infer<typeof adminSchema>;
+
+
+export const gradeSchema = z.object({
+  id: z.coerce.number().optional(),
+  level: z.string().min(1, { message: "Grade level string is required!" }),
+});
+
+export type GradeSchema = z.infer<typeof gradeSchema>;

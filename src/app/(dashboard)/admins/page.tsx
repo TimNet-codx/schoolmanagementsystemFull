@@ -101,13 +101,12 @@ const AdminListPage = async ({
       {role === "admin" && (
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
-            <Link
-              href={`/list/teachers/${item.id}`}
-              aria-label="View teacher"
-              className="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
-            >
-              <Eye className="w-3.5 h-3.5" />
-            </Link>
+            <FormContainer
+              table="admin"
+              type="update"
+              id={item.id}
+              data={item}
+            />
             <FormContainer table="admin" type="delete" id={item.id} />
           </div>
         </td>

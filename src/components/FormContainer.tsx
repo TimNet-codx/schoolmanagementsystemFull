@@ -19,7 +19,8 @@ export type FormContainerProps = {
     | "announcement"
     | "message"
     | "profile"
-    | "admin";
+    | "admin"
+    | "grade";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | String;

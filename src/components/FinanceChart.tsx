@@ -151,7 +151,7 @@ const data = [
   { name: "Dec", income: 3490, expense: 4300 },
 ];
 
-const money = (n: number) => `$${n.toLocaleString("en-US")}`;
+const money = (n: number) => `₦${n.toLocaleString("en-NG")}`;
 
 const FinanceChart = () => {
   const rate = (SUMMARY.collected / SUMMARY.budget) * 100;

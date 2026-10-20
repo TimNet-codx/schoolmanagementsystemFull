@@ -16,16 +16,44 @@ export const isAdminCaller = async () => {
   return (sessionClaims?.metadata as any)?.role === "admin";
 };
 
+// export const getAdminErrorMessage = (error: any) => {
+//   if (error?.code === "P2002") {
+//     return "An admin with this username already exists";
+//   }
+//   return (
+//     error?.errors?.[0]?.lonfMessage ||
+//     error?.error?.[0]?.message ||
+//     " Something went wrong!!!"
+//   );
+// };
+
 export const getAdminErrorMessage = (error: any) => {
+  // 1. Prisma Unique Constraint Violations (e.g., Duplicate Username, Email, or Phone)
   if (error?.code === "P2002") {
-    return "An admin with this username already exists";
+    const target = error?.meta?.target;
+    if (Array.isArray(target) && target.length > 0) {
+      return `An admin with this ${target.join(", ")} already exists.`;
+    }
+    return "An admin with this username or email already exists.";
   }
-  return (
-    error?.errors?.[0]?.lonfMessage ||
-    error?.error?.[0]?.message ||
-    " Something went wrong!"
-  );
-};
+
+  // 2. Clerk API / Form Errors (fixed typo: longMessage instead of lonfMessage)
+  if (error?.errors?.[0]?.longMessage) {
+    return error.errors[0].longMessage;
+  }
+
+  if (error?.errors?.[0]?.message) {
+    return error.errors[0].message;
+  }
+
+  // 3. Standard JavaScript / Server Action Errors
+  if (error?.message) {
+    return error.message;
+  }
+
+  // 4. Default Fallback
+  return "Something went wrong!!!";
+};  
 
 const currentWorkWeek = () => {
   const today = new Date();

@@ -14,6 +14,8 @@ import {
   EventSchema,
   examSchema,
   ExamSchema,
+  gradeSchema,
+  GradeSchema,
   lessonSchema,
   LessonSchema,
   messageSchema,
@@ -2405,28 +2407,33 @@ export const createAdmin = async (
         username: data.username,
         name: data.name,
         surname: data.surname,
-        email: data.email || null,
-        phone: data.phone || null,
+        email: data.email,
+        phone: data.phone,
         address: data.address,
         bloodType: data.bloodType,
         birthday: new Date(data.birthday),
         sex: data.sex,
-        img: data.img || null,
+        img: data.img,
       },
     });
 
     return { success: true, error: false };
   } catch (error: any) {
     // Roll back the Clerk user if the database insert failed
-    if (clerkUserId) {
-      try {
-        const clerk = await clerkClient();
-        await clerk.users.deleteUser(clerkUserId);
-      } catch (rollbackError) {
-        // ignore rollback failure
-      }
-    }
-    return { success: false, error: true, message: getAdminErrorMessage(error) };
+    // if (clerkUserId) {
+    //   try {
+    //     const clerk = await clerkClient();
+    //     await clerk.users.deleteUser(clerkUserId);
+    //   } catch (rollbackError) {
+    //     // ignore rollback failure
+    //   }
+    // }
+    console.error("Create Admin Error:", error);
+    return {
+      success: false,
+      error: true,
+      message: getAdminErrorMessage(error),
+    };
   }
 };
 
@@ -2474,7 +2481,11 @@ export const updateAdmin = async (
 
     return { success: true, error: false };
   } catch (error: any) {
-    return { success: false, error: true, message: getAdminErrorMessage(error) };
+    return {
+      success: false,
+      error: true,
+      message: getAdminErrorMessage(error),
+    };
   }
 };
 
@@ -2511,13 +2522,80 @@ export const deleteAdmin = async (
 
     return { success: true, error: false };
   } catch (error: any) {
-    return { success: false, error: true, message: getAdminErrorMessage(error) };
+    return {
+      success: false,
+      error: true,
+      message: getAdminErrorMessage(error),
+    };
   }
 };
 
 
+export const createGrade = async (
+  currentState: CurrentState,
+  formData: GradeSchema
+) => {
+  const validatedFields = gradeSchema.safeParse(formData);
 
+  if (!validatedFields.success) {
+    return { success: false, error: true, message: "Invalid form data!" };
+  }
 
+  try {
+    await prisma.grade.create({
+      data: {
+        level: validatedFields.data.level,
+      },
+    });
 
+    return { success: true, error: false };
+  } catch (err: any) {
+    if (err?.code === "P2002") {
+      return { success: false, error: true, message: "Grade level already exists!" };
+    }
+    return { success: false, error: true, message: err?.message || "Something went wrong!" };
+  }
+};
 
+export const updateGrade = async (
+  currentState: CurrentState,
+  formData: GradeSchema
+) => {
+  const validatedFields = gradeSchema.safeParse(formData);
 
+  if (!validatedFields.success || !validatedFields.data.id) {
+    return { success: false, error: true, message: "Invalid form data!" };
+  }
+
+  try {
+    await prisma.grade.update({
+      where: { id: validatedFields.data.id },
+      data: {
+        level: validatedFields.data.level,
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err: any) {
+    return { success: false, error: true, message: err?.message || "Something went wrong!" };
+  }
+};
+
+export const deleteGrade = async (
+  currentState: CurrentState,
+  data: FormData,
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.grade.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // revalidatePath("/list/events");
+    return { success: true, error: false };
+  } catch (error: any) {
+    console.error("Delete Grade Error:", error);
+    return { success: false, error: true, message: error.message };
+  }
+};

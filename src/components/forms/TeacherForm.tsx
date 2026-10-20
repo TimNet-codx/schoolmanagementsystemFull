@@ -249,7 +249,6 @@
 
 // export default TeacherForm;
 
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -259,6 +258,7 @@ import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react";
 import {
   FormGrid,
   FormProps,
@@ -270,6 +270,8 @@ import {
 import InputField from "../InputField";
 
 const TeacherForm = ({ type, data, setOpen, relatedData }: FormProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+
   const formattedBirthday = data?.birthday
     ? new Date(data.birthday).toISOString().split("T")[0]
     : "";
@@ -331,23 +333,111 @@ const TeacherForm = ({ type, data, setOpen, relatedData }: FormProps) => {
       <FormSection title="Authentication Information">
         <FormGrid>
           {data?.id && (
-            <InputField label="Id" name="id" defaultValue={data?.id} register={register} error={errors?.id} hidden />
+            <InputField
+              label="Id"
+              name="id"
+              defaultValue={data?.id}
+              register={register}
+              error={errors?.id}
+              hidden
+            />
           )}
-          <InputField label="Username" name="username" defaultValue={data?.username} register={register} error={errors?.username} />
-          <InputField label="Email" name="email" defaultValue={data?.email} register={register} error={errors?.email} />
-          <InputField label="Password (Demo1234)"  name="password" type="password" defaultValue={data?.password} register={register} error={errors?.password} />
+          <InputField
+            label="Username"
+            name="username"
+            defaultValue={data?.username}
+            register={register}
+            error={errors?.username}
+          />
+          <InputField
+            label="Email"
+            name="email"
+            defaultValue={data?.email}
+            register={register}
+            error={errors?.email}
+          />
+          {/* <InputField label="Password (Demo1234)"  name="password" type="password" defaultValue={data?.password} register={register} error={errors?.password} /> */}
+          {/* Password Input with Show/Hide Toggle */}
+          <div className="relative">
+            <InputField
+              label={
+                type === "create"
+                  ? "Password(Demo1234)"
+                  : "New password (leave blank to keep current Demo1234)"
+              }
+              name="password"
+              type={showPassword ? "text" : "password"}
+              register={register}
+              error={errors?.password}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-[34px] text-gray-500 hover:text-gray-700 transition"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </FormGrid>
       </FormSection>
 
       <FormSection title="Personal Information">
         <FormGrid>
-          <InputField label="First Name" name="name" defaultValue={data?.name} register={register} error={errors.name} />
-          <InputField label="Last Name" name="surname" defaultValue={data?.surname} register={register} error={errors.surname} />
-          <InputField label="Phone" name="phone" defaultValue={data?.phone} register={register} error={errors.phone} />
-          <InputField label="Address" name="address" defaultValue={data?.address} register={register} error={errors.address} />
-          <InputField label="Blood Type" name="bloodType" defaultValue={data?.bloodType} register={register} error={errors.bloodType} />
-          <InputField label="Birthday" name="birthday" type="date" defaultValue={formattedBirthday} register={register} error={errors.birthday} />
-          <SelectField label="Sex" name="sex" defaultValue={data?.sex} register={register} error={errors.sex}>
+          <InputField
+            label="First Name"
+            name="name"
+            defaultValue={data?.name}
+            register={register}
+            error={errors.name}
+          />
+          <InputField
+            label="Last Name"
+            name="surname"
+            defaultValue={data?.surname}
+            register={register}
+            error={errors.surname}
+          />
+          <InputField
+            label="Phone"
+            name="phone"
+            defaultValue={data?.phone}
+            register={register}
+            error={errors.phone}
+          />
+          <InputField
+            label="Address"
+            name="address"
+            defaultValue={data?.address}
+            register={register}
+            error={errors.address}
+          />
+          <InputField
+            label="Blood Type"
+            name="bloodType"
+            defaultValue={data?.bloodType}
+            register={register}
+            error={errors.bloodType}
+          />
+          <InputField
+            label="Birthday"
+            name="birthday"
+            type="date"
+            defaultValue={formattedBirthday}
+            register={register}
+            error={errors.birthday}
+          />
+          <SelectField
+            label="Sex"
+            name="sex"
+            defaultValue={data?.sex}
+            register={register}
+            error={errors.sex}
+          >
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
           </SelectField>
@@ -367,7 +457,11 @@ const TeacherForm = ({ type, data, setOpen, relatedData }: FormProps) => {
           </SelectField>
         </FormGrid>
 
-        <PhotoUpload uploaded={!!img} hasExisting={!!data?.img} onUploaded={setImg} />
+        <PhotoUpload
+          uploaded={!!img}
+          hasExisting={!!data?.img}
+          onUploaded={setImg}
+        />
       </FormSection>
     </FormShell>
   );

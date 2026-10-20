@@ -550,9 +550,6 @@
 
 // export default LoginPage;
 
-
-
-
 "use client";
 
 import * as Clerk from "@clerk/elements/common";
@@ -719,7 +716,7 @@ const LoadingScreen = ({
   useEffect(() => {
     const id = setInterval(
       () => setStepIndex((i) => Math.min(i + 1, steps.length - 1)),
-      1400
+      1400,
     );
     return () => clearInterval(id);
   }, [steps.length]);
@@ -858,7 +855,7 @@ const LoginPage = () => {
         <div className="hidden sm:flex items-center gap-2">
           <span className="flex items-center gap-1.5 text-[11px] text-gray-600 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1">
             <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
-            Academic Year 2024 - 2025
+            Academic Year 2026 - 2027
           </span>
           <span className="flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2.5 py-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />

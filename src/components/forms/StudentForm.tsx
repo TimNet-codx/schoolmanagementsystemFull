@@ -305,6 +305,7 @@ import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react";
 import {
   FormGrid,
   FormProps,
@@ -316,6 +317,8 @@ import {
 import InputField from "../InputField";
 
 const StudentForm = ({ type, data, setOpen, relatedData }: FormProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+  
   const formattedBirthday = data?.birthday
     ? new Date(data.birthday).toISOString().split("T")[0]
     : "";
@@ -392,7 +395,32 @@ const StudentForm = ({ type, data, setOpen, relatedData }: FormProps) => {
           )}
           <InputField label="Username" name="username" defaultValue={data?.username} register={register} error={errors?.username} />
           <InputField label="Email" name="email" defaultValue={data?.email} register={register} error={errors?.email} />
-          <InputField label="Password (Demo1234)" name="password" type="password" register={register} error={errors?.password} />
+                 {/* Password Input with Show/Hide Toggle */}
+          <div className="relative">
+            <InputField
+              label={
+                type === "create"
+                  ? "Password(Demo1234)"
+                  : "New password (leave blank to keep current Demo1234)"
+              }
+              name="password"
+              type={showPassword ? "text" : "password"}
+              register={register}
+              error={errors?.password}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-[34px] text-gray-500 hover:text-gray-700 transition"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </FormGrid>
       </FormSection>
 

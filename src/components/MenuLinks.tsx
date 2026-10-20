@@ -17,7 +17,8 @@ import {
   Settings,
   UserCircle,
   Users,
-  SectionIcon,
+  ShieldCheck,
+  BookBookmark,
   Presentation,
   type LucideIcon,
 } from "lucide-react";
@@ -58,6 +59,12 @@ const menuItems: {
         label: "Parents",
         href: "/list/parents",
         visible: ["admin", "teacher"],
+      },
+      {
+        icon: BookBookmark,
+        label: "Grade Level",
+        href: "/list/grades",
+        visible: ["admin"],
       },
       {
         icon: BookOpen,
@@ -117,7 +124,7 @@ const menuItems: {
       { icon: UserCircle, label: "Profile", href: "/profile", visible: ALL },
       { icon: Settings, label: "Settings", href: "/settings", visible: ALL },
       {
-        icon: SectionIcon,
+        icon: ShieldCheck,
         label: "Admin",
         href: "/admins",
         visible: ["admin"],
