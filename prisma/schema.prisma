@@ -48,6 +48,7 @@ model Student {
   attendances Attendance[]
   results     Result[]
   birthday    DateTime
+  payments    Payment[]
 }
 
 model Teacher {
@@ -102,6 +103,7 @@ model Class {
   grade         Grade          @relation(fields: [gradeId], references: [id])
   events        Event[]
   announcements Announcement[]
+  feeStructures FeeStructure[]
 }
 
 model Subject {
@@ -217,6 +219,39 @@ model Profile {
   username String? @unique
   name     String  @default("")
   surname  String  @default("")
+}
+
+model FeeStructure {
+  id        Int       @id @default(autoincrement())
+  title     String
+  classId   Int
+  class     Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  term      String
+  session   String
+  amount    Int
+  payments  Payment[]
+  createdAt DateTime  @default(now())
+
+  @@unique([title, classId, term, session])
+  @@index([classId])
+}
+
+model Payment {
+  id             Int          @id @default(autoincrement())
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feeStructureId Int
+  feeStructure   FeeStructure @relation(fields: [feeStructureId], references: [id], onDelete: Restrict)
+  amount         Int
+  plan           String
+  method         String
+  reference      String?
+  note           String?
+  receiptNo      String       @unique
+  recordedBy     String
+  paidAt         DateTime     @default(now())
+
+  @@index([feeStructureId, studentId])
 }
 
 enum UserSex {

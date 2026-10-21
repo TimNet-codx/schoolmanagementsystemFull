@@ -4,6 +4,10 @@ import { auth } from "@clerk/nextjs/server";
 // const { userId, sessionClaims } = authData;
 // export const role = (sessionClaims?.metadata as { role?: string })?.role;
 // export const currentUserId = userId;
+type CurrentState = { success: boolean; error: boolean; message?: string };;
+class UserError extends Error {}
+const fail = (message: string): CurrentState => ({ success: false, error: true, message });
+const ok = (): CurrentState => ({ success: true, error: false });
 
 export const getAuthUser = async () => {
   const { userId, sessionClaims } = await auth();
@@ -14,6 +18,17 @@ export const getAuthUser = async () => {
 export const isAdminCaller = async () => {
   const { userId, sessionClaims } = await auth();
   return (sessionClaims?.metadata as any)?.role === "admin";
+};
+export async function requireAdmin() {
+  const { role, currentUserId } = await getAuthUser();
+  if (role !== "admin") throw new UserError("Only an admin can do this.");
+  return currentUserId as string;
+}
+
+export const handle = (e: unknown): CurrentState => {
+  if (e instanceof UserError) return fail(e.message);
+  console.error(e);
+  return fail("Something went wrong!");
 };
 
 // export const getAdminErrorMessage = (error: any) => {
@@ -117,3 +132,10 @@ export const adjustScheduleToCurrentweek = (
     };
   });
 };
+
+
+export const receiptNo = () =>
+  `TN-${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 1296)
+    .toString(36)
+    .toUpperCase()
+    .padStart(2, "0")}`;

@@ -50,12 +50,12 @@
 
 // export default AdminPage;
 
-
 import Announcements from "@/components/Announcements";
 import AttendanceChartContainer from "@/components/AttendanceChartContainer";
 import CountChartContainer from "@/components/CountChartContainer";
 import EventCalendarContainer from "@/components/EventCalendarContainer";
 import FinanceChart from "@/components/FinanceChart";
+import FinanceChartContainer from "@/components/Financechartcontainer";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { ReactNode } from "react";
@@ -77,14 +77,51 @@ const Icon = ({ className, children }: IconProps & { children: ReactNode }) => (
   </svg>
 );
 
-const Download = (props: IconProps) => <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5M12 15V3" /></Icon>;
-const GraduationCap = (props: IconProps) => <Icon {...props}><path d="m2 10 10-5 10 5-10 5-10-5Z" /><path d="M6 12v5c4 3 8 3 12 0v-5M22 10v6" /></Icon>;
-const Bell = (props: IconProps) => <Icon {...props}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></Icon>;
-const Users = (props: IconProps) => <Icon {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6M23 11h-6" /></Icon>;
-const UserPlus = (props: IconProps) => <Icon {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6M23 11h-6" /></Icon>;
-const ShieldCheck = (props: IconProps) => <Icon {...props}><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" /><path d="m9 12 2 2 4-4" /></Icon>;
-const Briefcase = (props: IconProps) => <Icon {...props}><rect x="3" y="7" width="18" height="14" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2" /></Icon>;
-const CalendarDays = (props: IconProps) => <Icon {...props}><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" /></Icon>;
+const Download = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <path d="m7 10 5 5 5-5M12 15V3" />
+  </Icon>
+);
+const GraduationCap = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="m2 10 10-5 10 5-10 5-10-5Z" />
+    <path d="M6 12v5c4 3 8 3 12 0v-5M22 10v6" />
+  </Icon>
+);
+const Bell = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+  </Icon>
+);
+const Users = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6M23 11h-6" />
+  </Icon>
+);
+const UserPlus = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6M23 11h-6" />
+  </Icon>
+);
+const ShieldCheck = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
+    <path d="m9 12 2 2 4-4" />
+  </Icon>
+);
+const Briefcase = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="3" y="7" width="18" height="14" rx="2" />
+    <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2" />
+  </Icon>
+);
+const CalendarDays = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="3" y="4" width="18" height="17" rx="2" />
+    <path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
+  </Icon>
+);
 
 /* ---------- Small presentational pieces ---------- */
 
@@ -215,7 +252,9 @@ const AdminPage = async ({
 
         <div className="flex flex-col items-start md:items-end gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <HeaderPill icon={<CalendarDays className="w-3.5 h-3.5 text-blue-500" />}>
+            <HeaderPill
+              icon={<CalendarDays className="w-3.5 h-3.5 text-blue-500" />}
+            >
               Spring 2025 • Wk 8
             </HeaderPill>
             <button className="flex items-center gap-1.5 text-[11px] text-gray-600 bg-white border border-gray-200 rounded-md px-2.5 py-1.5 hover:bg-gray-50">
@@ -307,7 +346,7 @@ const AdminPage = async ({
 
         {/* Tuition & finance */}
         <div className="h-[420px]">
-          <FinanceChart />
+          <FinanceChartContainer />
         </div>
 
         {/* Announcements */}

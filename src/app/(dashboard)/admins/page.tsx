@@ -6,9 +6,8 @@ import { Admin, Prisma } from "@/generated/prisma/client";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { getAuthUser } from "@/lib/utils";
-import { Eye, ListFilter, ArrowUpDown } from "lucide-react";
+import { ListFilter, ArrowUpDown } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 type AdminList = Admin;
 

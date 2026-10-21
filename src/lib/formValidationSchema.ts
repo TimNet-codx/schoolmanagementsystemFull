@@ -348,3 +348,30 @@ export const gradeSchema = z.object({
 });
 
 export type GradeSchema = z.infer<typeof gradeSchema>;
+
+
+
+export const feeSchema = z.object({
+  title: z.string().trim().min(2, "Enter a fee name"),
+  classId: z.coerce.number().int().min(0), // 0 = every class
+  term: z.string().min(1),
+  session: z.string().trim().regex(/^\d{4}\/\d{4}$/, "Session must look like 2026/2027"),
+  amount: z.coerce.number().int().positive("Amount must be greater than 0"),
+});
+
+export type FeeSchema = z.infer<typeof feeSchema>;
+
+
+
+export const paymentSchema = z.object({
+  studentId: z.string().min(1, "Select a student"),
+  feeStructureId: z.coerce.number().int().positive(),
+  plan: z.enum(["FULL", "HALF", "QUARTER", "CUSTOM"]),
+  method: z.enum(["CASH", "TRANSFER", "POS", "CHEQUE"]),
+  amount: z.coerce.number().int().positive("Amount must be greater than 0"),
+  reference: z.string().trim().max(80).optional().or(z.literal("")),
+  note: z.string().trim().max(200).optional().or(z.literal("")),
+});
+
+export type PaymentSchema = z.infer<typeof paymentSchema>;
+

@@ -20,7 +20,8 @@ import {
   ShieldCheck,
   BookBookmark,
   Presentation,
-  type LucideIcon,
+  Wallet,
+  Calculator, type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -115,6 +116,18 @@ const menuItems: {
         label: "Announcements",
         href: "/list/announcements",
         visible: ALL,
+      },
+      {
+        icon: Calculator,
+        label: "Accounting",
+        href: "/list/accounting",
+        visible: ["admin", "teacher"],
+      },
+      {
+        icon: Wallet,
+        label: "Fees",
+        href: "/list/fees",
+        visible: ["admin"],
       },
     ],
   },

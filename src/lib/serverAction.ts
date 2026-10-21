@@ -14,6 +14,8 @@ import {
   EventSchema,
   examSchema,
   ExamSchema,
+  FeeSchema,
+  feeSchema,
   gradeSchema,
   GradeSchema,
   lessonSchema,
@@ -21,6 +23,8 @@ import {
   messageSchema,
   MessageSchema,
   ParentSchema,
+  PaymentSchema,
+  paymentSchema,
   profileSchema,
   ProfileSchema,
   resultSchema,
@@ -33,9 +37,19 @@ import prisma from "./prisma";
 import { success } from "zod";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { error } from "console";
-import { getAdminErrorMessage } from "./utils";
+import { getAdminErrorMessage, handle, receiptNo, requireAdmin } from "./utils";
+import { naira } from "./Accounting";
 
 type CurrentState = { success: boolean; error: boolean; message?: string };
+
+class UserError extends Error {}
+
+const fail = (message: string): CurrentState => ({
+  success: false,
+  error: true,
+  message,
+});
+const ok = (): CurrentState => ({ success: true, error: false });
 
 // Subject Actions
 export const createSubject = async (
@@ -2530,10 +2544,9 @@ export const deleteAdmin = async (
   }
 };
 
-
 export const createGrade = async (
   currentState: CurrentState,
-  formData: GradeSchema
+  formData: GradeSchema,
 ) => {
   const validatedFields = gradeSchema.safeParse(formData);
 
@@ -2551,15 +2564,23 @@ export const createGrade = async (
     return { success: true, error: false };
   } catch (err: any) {
     if (err?.code === "P2002") {
-      return { success: false, error: true, message: "Grade level already exists!" };
+      return {
+        success: false,
+        error: true,
+        message: "Grade level already exists!",
+      };
     }
-    return { success: false, error: true, message: err?.message || "Something went wrong!" };
+    return {
+      success: false,
+      error: true,
+      message: err?.message || "Something went wrong!",
+    };
   }
 };
 
 export const updateGrade = async (
   currentState: CurrentState,
-  formData: GradeSchema
+  formData: GradeSchema,
 ) => {
   const validatedFields = gradeSchema.safeParse(formData);
 
@@ -2577,7 +2598,11 @@ export const updateGrade = async (
 
     return { success: true, error: false };
   } catch (err: any) {
-    return { success: false, error: true, message: err?.message || "Something went wrong!" };
+    return {
+      success: false,
+      error: true,
+      message: err?.message || "Something went wrong!",
+    };
   }
 };
 
@@ -2599,3 +2624,132 @@ export const deleteGrade = async (
     return { success: false, error: true, message: error.message };
   }
 };
+
+export async function createFeeStructure(
+  currentState: CurrentState,
+  formData: FeeSchema,
+): Promise<CurrentState> {
+  try {
+    await requireAdmin();
+    const parsed = feeSchema.safeParse(formData);
+
+    if (!parsed.success) return fail(parsed.error.issues[0].message);
+    const { title, classId, term, session, amount } = parsed.data;
+
+    const classIds =
+      classId === 0
+        ? (await prisma.class.findMany({ select: { id: true } })).map(
+            (c) => c.id,
+          )
+        : [classId];
+    if (classIds.length === 0) return fail("No classes found.");
+
+    const res = await prisma.feeStructure.createMany({
+      data: classIds.map((id) => ({
+        title,
+        classId: id,
+        term,
+        session,
+        amount,
+      })),
+      skipDuplicates: true,
+    });
+    revalidatePath("/list/accounting");
+    revalidatePath("/list/accounting/fees");
+    revalidatePath("/admin");
+    return res.count === 0
+      ? fail("That fee already exists for this class/term/session.")
+      : ok();
+  } catch (e) {
+    return handle(e);
+  }
+}
+
+export async function deleteFeeStructure(
+  currentState: CurrentState,
+  data: FormData,
+): Promise<CurrentState> {
+  try {
+    await requireAdmin();
+    const id = Number(data.get("id"));
+    const used = await prisma.payment.count({ where: { feeStructureId: id } });
+    if (used > 0)
+      return fail("This fee already has payments, so it can't be deleted.");
+    await prisma.feeStructure.delete({ where: { id } });
+    revalidatePath("/list/accounting");
+    revalidatePath("/list/accounting/fees");
+    revalidatePath("/admin");
+    return ok();
+  } catch (e) {
+    return handle(e);
+  }
+}
+
+ 
+export async function recordPayment(
+   currentState: CurrentState,
+  formData: PaymentSchema,
+): Promise<CurrentState> {
+  try {
+    const userId = await requireAdmin();
+    const parsed = paymentSchema.safeParse(formData);
+    if (!parsed.success) return fail(parsed.error.issues[0].message);
+    const p = parsed.data;
+ 
+    await prisma.$transaction(async (tx) => {
+      const fee = await tx.feeStructure.findUnique({ where: { id: p.feeStructureId } });
+      if (!fee) throw new UserError("Fee not found.");
+ 
+      const student = await tx.student.findUnique({
+        where: { id: p.studentId },
+        select: { classId: true },
+      });
+      if (!student || student.classId !== fee.classId)
+        throw new UserError("This student is not in the class this fee belongs to.");
+ 
+      const agg = await tx.payment.aggregate({
+        where: { studentId: p.studentId, feeStructureId: fee.id },
+        _sum: { amount: true },
+      });
+      const balance = fee.amount - (agg._sum.amount ?? 0);
+      if (balance <= 0) throw new UserError("This fee is already fully paid.");
+      if (p.amount > balance)
+        throw new UserError(`Amount is more than the balance (${naira(balance)}).`);
+ 
+      await tx.payment.create({
+        data: {
+          studentId: p.studentId,
+          feeStructureId: fee.id,
+          amount: p.amount,
+          plan: p.plan,
+          method: p.method,
+          reference: p.reference || null,
+          note: p.note || null,
+          receiptNo: receiptNo(),
+          recordedBy: userId,
+        },
+      });
+    });
+ 
+    revalidatePath("/list/accounting");
+    revalidatePath("/admin");
+    return ok();
+  } catch (e) {
+    return handle(e);
+  }
+}
+ 
+export async function deletePayment(
+  currentState: CurrentState,
+  data: FormData,
+): Promise<CurrentState> {
+  try {
+    await requireAdmin();
+    await prisma.payment.delete({ where: { id: Number(data.get("id")) } });
+     revalidatePath("/list/accounting");
+    revalidatePath("/admin");
+    return ok();
+  } catch (e) {
+    return handle(e);
+  }
+}
