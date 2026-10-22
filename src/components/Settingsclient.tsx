@@ -19,7 +19,8 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Density, FontSize, Theme, useTheme } from "@/components/Themeprovider";
-
+import PasswordField from "./forms/PasswordForm";
+// import {PasswordField}  from "@/components/forms/PasswordForm";
 /* ------------------------------------------------------------------ */
 /* small building blocks                                               */
 /* ------------------------------------------------------------------ */
@@ -443,6 +444,7 @@ const Security = () => {
   const [saving, setSaving] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   const loadSessions = async () => {
     if (!user) return;
@@ -506,45 +508,97 @@ const Security = () => {
         subtitle="Use at least 8 characters. You'll stay signed in on this device."
       >
         {user.passwordEnabled ? (
+          // <form
+          //   onSubmit={changePassword}
+          //   className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+          // >
+          //   <label className="flex flex-col gap-1.5">
+          //     <Label>Current password</Label>
+          //     <div className="relative">
+          //       <input
+          //         autoComplete="current-password"
+          //         className={inputCls}
+          //         value={current}
+          //         type={showPassword ? "text" : "password"}
+          //         onChange={(e) => setCurrent(e.target.value)}
+          //       />
+          //       <button
+          //         type="button"
+          //         onClick={() => setShowPassword((prev) => !prev)}
+          //         className="absolute right-3 top-[34px] text-gray-500 hover:text-gray-700 transition"
+          //         tabIndex={-1}
+          //       >
+          //         {showPassword ? (
+          //           <EyeOff className="w-4 h-4" />
+          //         ) : (
+          //           <Eye className="w-4 h-4" />
+          //         )}
+          //       </button>
+          //     </div>
+          //   </label>
+          //   <label className="flex flex-col gap-1.5">
+          //     <Label>New password</Label>
+          //     <input
+          //       type="password"
+          //       autoComplete="new-password"
+          //       className={inputCls}
+          //       value={next}
+          //       onChange={(e) => setNext(e.target.value)}
+          //     />
+          //   </label>
+          //   <label className="flex flex-col gap-1.5">
+          //     <Label>Confirm new password</Label>
+          //     <input
+          //       type="password"
+          //       autoComplete="new-password"
+          //       className={inputCls}
+          //       value={confirm}
+          //       onChange={(e) => setConfirm(e.target.value)}
+          //     />
+          //     {mismatch && (
+          //       <span className="text-xs text-red-600">
+          //         Passwords don&apos;t match
+          //       </span>
+          //     )}
+          //   </label>
+          //   <div className="sm:col-span-3 flex justify-end">
+          //     <PrimaryButton
+          //       type="submit"
+          //       loading={saving}
+          //       disabled={!canSubmit}
+          //     >
+          //       <KeyRound size={14} /> Update password
+          //     </PrimaryButton>
+          //   </div>
+          // </form>
           <form
             onSubmit={changePassword}
             className="grid grid-cols-1 sm:grid-cols-3 gap-4"
           >
-            <label className="flex flex-col gap-1.5">
-              <Label>Current password</Label>
-              <input
-                type="password"
-                autoComplete="current-password"
-                className={inputCls}
-                value={current}
-                onChange={(e) => setCurrent(e.target.value)}
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <Label>New password</Label>
-              <input
-                type="password"
-                autoComplete="new-password"
-                className={inputCls}
-                value={next}
-                onChange={(e) => setNext(e.target.value)}
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <Label>Confirm new password</Label>
-              <input
-                type="password"
-                autoComplete="new-password"
-                className={inputCls}
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-              />
-              {mismatch && (
-                <span className="text-xs text-red-600">
-                  Passwords don&apos;t match
-                </span>
-              )}
-            </label>
+            <PasswordField
+              label="Current password"
+              autoComplete="current-password"
+              value={current}
+              onChange={setCurrent}
+            />
+            <PasswordField
+              label="New password"
+              autoComplete="new-password"
+              value={next}
+              onChange={setNext}
+              error={
+                next.length > 0 && next.length < 8
+                  ? "At least 8 characters"
+                  : undefined
+              }
+            />
+            <PasswordField
+              label="Confirm new password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={setConfirm}
+              error={mismatch ? "Passwords don't match" : undefined}
+            />
             <div className="sm:col-span-3 flex justify-end">
               <PrimaryButton
                 type="submit"

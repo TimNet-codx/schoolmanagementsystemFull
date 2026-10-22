@@ -205,14 +205,20 @@
 
 // export default ProfileForm;
 
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, ProfileSchema } from "@/lib/formValidationSchema";
 import { updateProfile } from "@/lib/serverAction";
 import { useRouter } from "next/navigation";
-import { Dispatch, SetStateAction, startTransition, useActionState, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  startTransition,
+  useActionState,
+  useEffect,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { FormGrid, FormShell, PhotoUpload, TextAreaField } from "../FormParts";
@@ -234,7 +240,8 @@ const ProfileForm = ({
     formState: { errors },
   } = useForm<ProfileSchema>({
     resolver: zodResolver(profileSchema) as any,
-    defaultValues: {
+    // Use `values` instead of `defaultValues` so form resets dynamically when data arrives
+    values: {
       id: data?.id,
       userId: data?.userId || relatedData?.currentUserId || "",
       username: data?.username || "",
@@ -257,7 +264,6 @@ const ProfileForm = ({
 
   const onSubmit = handleSubmit((formData) => {
     startTransition(() => {
-      // the uploaded photo was never included before; send it as the avatar
       formAction({
         ...formData,
         avatarUrl: img?.secure_url || formData.avatarUrl || "",
@@ -285,20 +291,83 @@ const ProfileForm = ({
     >
       <FormGrid>
         {data?.id && (
-          <InputField label="Id" name="id" defaultValue={data?.id} register={register} error={errors?.id} hidden />
+          <InputField
+            label="Id"
+            name="id"
+            defaultValue={data?.id}
+            register={register}
+            error={errors?.id}
+            hidden
+          />
         )}
-        <InputField label="User ID" name="userId" defaultValue={data?.userId || relatedData?.currentUserId} register={register} error={errors?.userId} hidden />
+        <InputField
+          label="User ID"
+          name="userId"
+          defaultValue={data?.userId || relatedData?.currentUserId}
+          register={register}
+          error={errors?.userId}
+          hidden
+        />
 
-        <InputField label="Username" name="username" defaultValue={data?.username} register={register} error={errors?.username} />
-        <InputField label="First Name" name="name" defaultValue={data?.name} register={register} error={errors?.name} />
-        <InputField label="Last Name" name="surname" defaultValue={data?.surname} register={register} error={errors?.surname} />
-        <InputField label="Email" name="email" type="email" defaultValue={data?.email} register={register} error={errors?.email} />
-        <InputField label="Phone" name="phone" defaultValue={data?.phone} register={register} error={errors?.phone} />
-        <InputField label="Address" name="address" defaultValue={data?.address} register={register} error={errors?.address} />
-        <TextAreaField label="Bio" name="bio" rows={3} defaultValue={data?.bio} register={register} error={errors.bio} className="sm:col-span-2 xl:col-span-3" />
+        <InputField
+          label="Username"
+          name="username"
+          defaultValue={data?.username}
+          register={register}
+          error={errors?.username}
+        />
+        <InputField
+          label="First Name"
+          name="name"
+          defaultValue={data?.name}
+          register={register}
+          error={errors?.name}
+        />
+        <InputField
+          label="Last Name"
+          name="surname"
+          defaultValue={data?.surname}
+          register={register}
+          error={errors?.surname}
+        />
+        <InputField
+          label="Email"
+          name="email"
+          type="email"
+          defaultValue={data?.email}
+          register={register}
+          error={errors?.email}
+        />
+        <InputField
+          label="Phone"
+          name="phone"
+          defaultValue={data?.phone}
+          register={register}
+          error={errors?.phone}
+        />
+        <InputField
+          label="Address"
+          name="address"
+          defaultValue={data?.address}
+          register={register}
+          error={errors?.address}
+        />
+        <TextAreaField
+          label="Bio"
+          name="bio"
+          rows={3}
+          defaultValue={data?.bio}
+          register={register}
+          error={errors.bio}
+          className="sm:col-span-2 xl:col-span-3"
+        />
       </FormGrid>
 
-      <PhotoUpload uploaded={!!img} hasExisting={!!data?.avatarUrl || !!data?.img} onUploaded={setImg} />
+      <PhotoUpload
+        uploaded={!!img}
+        hasExisting={!!data?.avatarUrl || !!data?.img}
+        onUploaded={setImg}
+      />
     </FormShell>
   );
 };

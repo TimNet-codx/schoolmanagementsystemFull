@@ -183,6 +183,20 @@ const ProfilePage = async () => {
   const avatar = profile?.avatarUrl || u?.img || "/noAvatar.png";
   const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : "";
 
+  // Combine profile and user table data so the form gets full defaults
+  const profileFormData = {
+    id: profile?.id,
+    userId: currentUserId,
+    username: u?.username || profile?.username || "",
+    name: u?.name || profile?.name || "",
+    surname: u?.surname || profile?.surname || "",
+    email: u?.email || profile?.email || "",
+    phone: phone || "",
+    address: address || "",
+    bio: profile?.bio || "",
+    avatarUrl: avatar !== "/noAvatar.png" ? avatar : "",
+  };
+
   return (
     <div className="p-4 flex flex-col md:flex-row gap-4 bg-[#F6F8FB] min-h-full">
       {/* PROFILE CARD */}
@@ -219,11 +233,7 @@ const ProfilePage = async () => {
         </div>
 
         <div className="w-full flex justify-center pt-2">
-          <FormContainer
-            table="profile"
-            type="update"
-            data={profile || { userId: currentUserId }}
-          />
+          <FormContainer table="profile" type="update" data={profileFormData} />
         </div>
       </div>
 
